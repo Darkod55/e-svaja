@@ -63,6 +63,21 @@
   scrollbar-width: none;
 }
 
+/*
+ * This strip is also a Bootstrap column, so .row > * pads it by half the
+ * gutter on each side. scroll-snap then scrolls that left padding away while
+ * the page is still loading (scrollLeft ends up equal to the padding). Chrome
+ * treats that scroll as the end of the LCP window. On mobile it happens
+ * before the hero is recorded, so the page reports no Largest Contentful
+ * Paint at all. Folding the left padding into the right padding leaves every
+ * card in the same place and keeps scrollLeft at 0, so nothing scrolls.
+ * The selector has to beat .row > *, which is printed later from app.css.
+ */
+.row > .home-cat-scroll {
+  padding-left: 0;
+  padding-right: var(--bs-gutter-x);
+}
+
 .home-cat-scroll::-webkit-scrollbar {
   display: none;
 }
