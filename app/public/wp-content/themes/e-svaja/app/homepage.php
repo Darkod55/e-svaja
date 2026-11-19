@@ -31,9 +31,17 @@ function logo_dimensions(): array
 
 /**
  * Theme logo and the Rank Math knowledge-graph logo, when that setting exists.
+ *
+ * Callers include WordPress image and meta filters, which pass null, '' or
+ * false for empty galleries and ACF fields. Those must not throw.
  */
-function is_logo_attachment(int $attachment_id): bool
+function is_logo_attachment($attachment_id): bool
 {
+    if (is_array($attachment_id) || is_object($attachment_id) || ! is_numeric($attachment_id)) {
+        return false;
+    }
+
+    $attachment_id = (int) $attachment_id;
     if ($attachment_id < 1) {
         return false;
     }
@@ -58,11 +66,14 @@ function is_logo_attachment(int $attachment_id): bool
  * width/height keys exist before class-jsonld.php reads them.
  *
  * @param mixed $value
+ * @param mixed $object_id
+ * @param mixed $meta_key
+ * @param mixed $single
  * @return mixed
  */
-function filter_logo_attachment_metadata($value, int $object_id, string $meta_key, bool $single)
+function filter_logo_attachment_metadata($value, $object_id, $meta_key, $single)
 {
-    if ($meta_key !== '_wp_attachment_metadata' || ! is_logo_attachment($object_id)) {
+    if (! is_string($meta_key) || $meta_key !== '_wp_attachment_metadata' || ! is_logo_attachment($object_id)) {
         return $value;
     }
 
@@ -91,10 +102,11 @@ add_filter('get_post_metadata', __NAMESPACE__ . '\\filter_logo_attachment_metada
 /**
  * Keep a 1×1 SVG logo from winning the layout even if metadata is ignored.
  *
- * @param array|false $image
- * @return array|false
+ * @param mixed $image
+ * @param mixed $attachment_id Attachment ID. WooCommerce and ACF pass '', null or false.
+ * @return mixed
  */
-function filter_logo_image_src($image, int $attachment_id)
+function filter_logo_image_src($image, $attachment_id)
 {
     if (! is_array($image) || ! is_logo_attachment($attachment_id)) {
         return $image;
@@ -493,13 +505,18 @@ add_action('wp_head', __NAMESPACE__ . '\\homepage_preload_hero', 2);
  * WordPress can mark a later image as the LCP candidate and override the
  * attributes passed into wp_get_attachment_image. The hero class wins.
  *
- * @param array<string, string> $loading_attrs
- * @param array<string, string> $attr
+ * @param mixed $loading_attrs
+ * @param mixed $tag_name
+ * @param mixed $attr
  * @return array<string, string>
  */
-function homepage_lcp_attributes(array $loading_attrs, string $tag_name, array $attr): array
+function homepage_lcp_attributes($loading_attrs, $tag_name, $attr): array
 {
-    if ($tag_name !== 'img') {
+    if (! is_array($loading_attrs)) {
+        $loading_attrs = [];
+    }
+
+    if (! is_string($tag_name) || $tag_name !== 'img' || ! is_array($attr)) {
         return $loading_attrs;
     }
 
@@ -543,11 +560,15 @@ add_filter('wp_get_loading_optimization_attributes', __NAMESPACE__ . '\\homepage
  * WooCommerce loop thumbnails. Lazy even if an older WooCommerce build skips
  * wp_get_loading_optimization_attributes.
  *
- * @param array<string, string> $attrs
+ * @param mixed $attrs
  * @return array<string, string>
  */
-function homepage_product_image_attrs(array $attrs): array
+function homepage_product_image_attrs($attrs): array
 {
+    if (! is_array($attrs)) {
+        return [];
+    }
+
     $attrs['loading'] = 'lazy';
     $attrs['decoding'] = 'async';
     $attrs['fetchpriority'] = 'low';
@@ -685,11 +706,15 @@ function homepage_script_src_needles(): array
 }
 
 /**
- * @param array<int, string> $handles
+ * @param mixed $handles
  * @return array<int, string>
  */
-function homepage_filter_print_scripts(array $handles): array
+function homepage_filter_print_scripts($handles): array
 {
+    if (! is_array($handles)) {
+        return [];
+    }
+
     if (! is_front_page()) {
         return $handles;
     }
@@ -759,8 +784,11 @@ function homepage_idle_loader(string $src, string $id): string
 /**
  * Rank Math's Analytics module (and gtag.js / gtm.js generally).
  */
-function homepage_is_gtag_loader(string $src, string $id = ''): bool
+function homepage_is_gtag_loader($src, $id = ''): bool
 {
+    $src = is_string($src) ? $src : '';
+    $id = is_string($id) ? $id : '';
+
     if ($id === 'google_gtagjs') {
         return $src !== '';
     }
@@ -774,11 +802,15 @@ function homepage_is_gtag_loader(string $src, string $id = ''): bool
  * which never passes through script_loader_tag. Strip the src here so the
  * browser cannot fetch it while the tag is being built.
  *
- * @param array<string, mixed> $attributes
+ * @param mixed $attributes
  * @return array<string, mixed>
  */
-function homepage_strip_gtag_script_attributes(array $attributes): array
+function homepage_strip_gtag_script_attributes($attributes): array
 {
+    if (! is_array($attributes)) {
+        return [];
+    }
+
     if (! is_front_page()) {
         return $attributes;
     }
@@ -880,13 +912,21 @@ add_action('wp_head', __NAMESPACE__ . '\\homepage_gtag_buffer_end', PHP_INT_MAX)
 /**
  * Enqueued gtag (not Rank Math's direct print) still goes through this filter.
  *
- * @param string $tag
+ * @param mixed $tag
+ * @param mixed $handle
+ * @param mixed $src
  */
-function homepage_delay_gtag($tag, string $handle, string $src): string
+function homepage_delay_gtag($tag, $handle, $src): string
 {
-    if (! is_front_page() || ! is_string($tag) || ! is_string($src)) {
+    if (! is_string($tag)) {
+        return '';
+    }
+
+    if (! is_front_page() || ! is_string($src)) {
         return $tag;
     }
+
+    $handle = is_string($handle) ? $handle : '';
     if (! homepage_is_gtag_loader($src, $handle)) {
         return $tag;
     }
