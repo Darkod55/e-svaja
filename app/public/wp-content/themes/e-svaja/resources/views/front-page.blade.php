@@ -1,5 +1,48 @@
 @extends('layouts.app-wide')
 
 @section('content')
-  {!! the_content() !!}
+  @php
+    $homepage = \App\homepage_sections();
+  @endphp
+
+  @include('blocks.blocks-general.module-hero-image.module-hero-image', [
+    'fields' => $homepage['hero']['fields'],
+    'block' => $homepage['hero']['block'],
+  ])
+
+  @include('blocks.blocks-woo.module-products.module-products', [
+    'fields' => $homepage['products']['fields'],
+    'block' => $homepage['products']['block'],
+  ])
+
+  @include('blocks.blocks-general.module-offer.module-offer', [
+    'fields' => $homepage['offer']['fields'],
+    'block' => $homepage['offer']['block'],
+  ])
+
+  @include('blocks.blocks-general.module-newsletter.module-newsletter', [
+    'fields' => $homepage['newsletter']['fields'],
+    'block' => $homepage['newsletter']['block'],
+  ])
+
+  @include('blocks.blocks-woo.module-categories.module-categories', [
+    'block' => $homepage['categories']['block'],
+    'slider_id' => $homepage['categories']['slider_id'],
+  ])
+  <script type="text/javascript">var sliderId = @json($homepage['categories']['slider_id']);</script>
+
+  @include('blocks.blocks-general.module-gift-card.module-gift-card', [
+    'fields' => $homepage['gift']['fields'],
+    'block' => $homepage['gift']['block'],
+  ])
+
+  @include('blocks.blocks-general.module-testimonials.module-testimonials', [
+    'fields' => $homepage['testimonials']['fields'],
+    'block' => $homepage['testimonials']['block'],
+  ])
+
+  @include('blocks.blocks-general.module-two-columns-text-image.module-two-columns-text-image', [
+    'fields' => $homepage['story']['fields'],
+    'block' => $homepage['story']['block'],
+  ])
 @endsection

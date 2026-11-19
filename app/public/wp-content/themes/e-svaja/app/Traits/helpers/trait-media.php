@@ -35,12 +35,13 @@ trait media {
         $custom_logo_alt_id = get_theme_mod('custom_logo_alt'); //TODO: uncomment to set up alternative logo usage
         $site_logo       = $site_logo_alt = '';
 
-        // set image width for SVGs from the width set in customizer
+        // SVGs have no intrinsic width/height in the media library, so the img
+        // was emitted as 1×1 and then jumped to the customizer width. Lock the
+        // box to the same 2.5:1 ratio the theme already uses for the logo.
         $custom_logo_svg_width   = '';
         if ($this->isSvg($custom_logo_id) || $this->isSvg($custom_logo_alt_id)) {
-            // set the width from the slider
-            $customizer_lw = get_theme_mod('logo_width', '40');
-            $custom_logo_svg_width = "width: {$customizer_lw}px; ";
+            [$logo_w, $logo_h] = \App\logo_dimensions();
+            $custom_logo_svg_width = "width: {$logo_w}px; height: {$logo_h}px; aspect-ratio: {$logo_w} / {$logo_h}; object-fit: contain;";
         }
 
         // return the custom logo or an empty string
@@ -51,9 +52,9 @@ trait media {
                 false,
                 [
                     'class'    => "$custom_logo_class main-logo",
-                    'alt'      => 'site-logo',
+                    'alt'      => 'Svaja',
                     'itemprop' => 'logo',
-                    'style'    => "{$custom_logo_svg_width} height: auto;",
+                    'style'    => $custom_logo_svg_width !== '' ? $custom_logo_svg_width : 'height: auto;',
                     'loading'   => 'eager'
                 ]
             );
@@ -67,9 +68,9 @@ trait media {
                 false,
                 [
                     'class'    => "$custom_logo_class $custom_logo_class-alt",
-                    'alt'      => 'site-logo-alt',
+                    'alt'      => 'Svaja',
                     'itemprop' => 'logo',
-                    'style'    => "{$custom_logo_svg_width} height: auto;",
+                    'style'    => $custom_logo_svg_width !== '' ? $custom_logo_svg_width : 'height: auto;',
                     'loading'   => 'eager'
                 ]
             );

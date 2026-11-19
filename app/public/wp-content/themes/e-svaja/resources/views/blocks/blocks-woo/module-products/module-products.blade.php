@@ -18,6 +18,11 @@ $columns  = count($products);
         {{-- .woocommerce wrapper is required for star-rating CSS (scoped as .woocommerce .star-rating). --}}
         <div class="woocommerce">
           @php
+            $home_product_images = function_exists('is_front_page') && is_front_page();
+            if ($home_product_images) {
+              add_filter('wp_get_attachment_image_attributes', '\\App\\homepage_product_image_attrs', 20);
+            }
+
             wc_set_loop_prop('columns', $columns);
             woocommerce_product_loop_start();
 
@@ -58,6 +63,10 @@ $columns  = count($products);
 
             woocommerce_product_loop_end();
             wp_reset_postdata();
+
+            if ($home_product_images) {
+              remove_filter('wp_get_attachment_image_attributes', '\\App\\homepage_product_image_attrs', 20);
+            }
           @endphp
         </div>
       </div>

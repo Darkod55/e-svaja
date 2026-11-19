@@ -31,3 +31,5 @@ foreach (glob(__DIR__ . '/Traits/filters/*.php') as $file) require_once $file;
  * Classes
  */
 foreach (glob(__DIR__ . '/Classes/*.php') as $file) require_once $file;
+
+require_once __DIR__ . '/homepage.php';
