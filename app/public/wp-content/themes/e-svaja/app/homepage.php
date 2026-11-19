@@ -913,6 +913,11 @@ add_filter('script_loader_tag', __NAMESPACE__ . '\\homepage_delay_gtag', 20, 3);
  * The Zoho form HTML is stored in an option. Leave the form and its validation
  * inline, and load only the analytics servlet the same way as gtag.
  *
+ * The newsletter partial calls this directly. It must not pass the form
+ * through the_content_lite: convert_chars turns && in the validation script
+ * into &#038;&#038;. The filter below still covers any other front-page copy
+ * that includes the servlet.
+ *
  * @param mixed $content
  * @return mixed
  */
