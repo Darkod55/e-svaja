@@ -52,7 +52,7 @@ trait media {
                 false,
                 [
                     'class'    => "$custom_logo_class main-logo",
-                    'alt'      => 'site-logo',
+                    'alt'      => 'Svaja',
                     'itemprop' => 'logo',
                     'style'    => $custom_logo_svg_width !== '' ? $custom_logo_svg_width : 'height: auto;',
                     'loading'   => 'eager'
@@ -68,7 +68,7 @@ trait media {
                 false,
                 [
                     'class'    => "$custom_logo_class $custom_logo_class-alt",
-                    'alt'      => 'site-logo-alt',
+                    'alt'      => 'Svaja',
                     'itemprop' => 'logo',
                     'style'    => $custom_logo_svg_width !== '' ? $custom_logo_svg_width : 'height: auto;',
                     'loading'   => 'eager'
