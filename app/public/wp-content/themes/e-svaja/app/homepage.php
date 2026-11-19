@@ -170,7 +170,7 @@ function home_image_attrs(array $attrs, $fields): array
         $attrs['class'] = trim(($attrs['class'] ?? '') . ' home-hero-lcp');
         $attrs['loading'] = 'eager';
         $attrs['fetchpriority'] = 'high';
-        $attrs['decoding'] = 'async';
+        $attrs['decoding'] = 'sync';
     }
 
     if (! empty($fields->home_image_alt)) {
@@ -316,6 +316,8 @@ HTML,
                 'home_lcp' => true,
                 'home_image_alt' => 'Hand-blown glass art sculptures and gifts by Svaja',
                 'home_image_sizes' => '100vw',
+                // Mobile LCP file. srcset still offers the 1280w original for wide screens.
+                'home_image_size' => 'medium_large',
             ],
             'block' => [
                 'title' => 'Module Hero Image',
@@ -464,13 +466,16 @@ function homepage_preload_hero(): void
     }
 
     $id = 33435;
-    $src = wp_get_attachment_image_url($id, 'full');
+    // Same registered size as the <img src>, so the preload href is the mobile
+    // candidate (768w) rather than the 1280w file. imagesrcset still lets a
+    // wide screen pick the larger file, matching the img srcset.
+    $src = wp_get_attachment_image_url($id, 'medium_large');
     if (! $src) {
         return;
     }
 
     $src = homepage_to_webp_url($src);
-    $srcset = wp_get_attachment_image_srcset($id, 'full');
+    $srcset = wp_get_attachment_image_srcset($id, 'medium_large');
     $type = str_ends_with(strtolower((string) wp_parse_url($src, PHP_URL_PATH)), '.webp')
         ? 'image/webp'
         : (get_post_mime_type($id) ?: 'image/webp');
@@ -506,7 +511,7 @@ function homepage_lcp_attributes(array $loading_attrs, string $tag_name, array $
     if (str_contains($class, 'home-hero-lcp')) {
         $loading_attrs['loading'] = 'eager';
         $loading_attrs['fetchpriority'] = 'high';
-        $loading_attrs['decoding'] = 'async';
+        $loading_attrs['decoding'] = 'sync';
 
         return $loading_attrs;
     }
@@ -1029,16 +1034,27 @@ function homepage_callback_name($callback): string
 add_action('wp_head', __NAMESPACE__ . '\\homepage_remove_unused_head_callbacks', 0);
 add_action('wp_footer', __NAMESPACE__ . '\\homepage_remove_unused_head_callbacks', 0);
 
-add_action('wp_enqueue_scripts', function () {
+/**
+ * The hero rules are small. Inlining them removes a render-blocking request
+ * and keeps the rules in the HTML if the stylesheet file is not deployed.
+ */
+function homepage_inline_front_css(): void
+{
     if (! is_front_page()) {
         return;
     }
 
     $path = get_theme_file_path('resources/styles/front-page.css');
-    wp_enqueue_style(
-        'e-svaja-front-page',
-        get_theme_file_uri('resources/styles/front-page.css'),
-        [],
-        is_readable($path) ? (string) filemtime($path) : null
-    );
-}, 200);
+    if (! is_readable($path)) {
+        return;
+    }
+
+    $css = file_get_contents($path);
+    if (! is_string($css) || $css === '') {
+        return;
+    }
+
+    echo '<style id="e-svaja-front-page">' . $css . '</style>' . "\n";
+}
+
+add_action('wp_head', __NAMESPACE__ . '\\homepage_inline_front_css', 7);

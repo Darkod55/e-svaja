@@ -26,8 +26,11 @@
 }
 
 .home-hero.block-module-hero-image > img {
+  /* Theme CSS sets z-index:-1, which paints the banner behind the white body
+     and keeps it from being the first paint. The text overlay stays on .zi-1. */
   position: absolute;
   inset: 0;
+  z-index: 0;
   width: 100%;
   height: 100%;
   max-width: none;
