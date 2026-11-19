@@ -47,31 +47,90 @@
 }
 
 /*
- * Category slick starts the slides stacked, then rewrites them into a row.
- * Match data-slick (6 / 3 / 1) before .slick-initialized so that jump does
- * not move the rest of the page. Initialized slick keeps the theme rules.
+ * Category row without Slick. Same 6 / 3 / 1 counts as the old data-slick
+ * config. The chevrons scroll one card; overflow stays in the row so the
+ * page below does not jump when a script rewrites the slides.
  */
-.block-module-categories .slider-cats:not(.slick-initialized) {
+.home-cat-scroll {
   display: flex;
   flex-wrap: nowrap;
-  overflow: hidden;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
 }
 
-.block-module-categories .slider-cats:not(.slick-initialized) > .cat-box {
+.home-cat-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.home-cat-scroll > .cat-box {
   flex: 0 0 calc(100% / 6);
   max-width: calc(100% / 6);
+  scroll-snap-align: start;
+}
+
+#icon-slick-left,
+#icon-slick-right {
+  cursor: pointer;
 }
 
 @media (max-width: 1024px) {
-  .block-module-categories .slider-cats:not(.slick-initialized) > .cat-box {
+  .home-cat-scroll > .cat-box {
     flex-basis: calc(100% / 3);
     max-width: calc(100% / 3);
   }
 }
 
 @media (max-width: 767px) {
-  .block-module-categories .slider-cats:not(.slick-initialized) > .cat-box {
+  .home-cat-scroll > .cat-box {
     flex-basis: 100%;
     max-width: 100%;
   }
+}
+
+/* Star glyphs lived in woocommerce.css, which the homepage no longer loads. */
+@font-face {
+  font-family: star;
+  src: url("/wp-content/plugins/woocommerce/assets/fonts/star.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.woocommerce .star-rating {
+  overflow: hidden;
+  position: relative;
+  height: 1em;
+  line-height: 1;
+  font-size: 1em;
+  width: 5.4em;
+  font-family: star;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.woocommerce .star-rating::before {
+  content: "sssss";
+  color: #d3ced2;
+  float: left;
+  top: 0;
+  left: 0;
+  position: absolute;
+}
+
+.woocommerce .star-rating span {
+  overflow: hidden;
+  float: left;
+  top: 0;
+  left: 0;
+  position: absolute;
+  padding-top: 1.5em;
+}
+
+.woocommerce .star-rating span::before {
+  content: "SSSSS";
+  top: 0;
+  position: absolute;
+  left: 0;
 }

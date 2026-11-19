@@ -39,7 +39,7 @@ if ($fields->columns === '7-5') {
       </div>
       <div class="{!! $col_2 !!} {!! $col_2_offset ?? '' !!} anm8">
         @if ($image ?? false)
-          {!! wp_get_attachment_image($image, 'full', false, \App\home_image_attrs(['class' => 'w-100 ' . $img_radius], $fields ?? null)) !!}
+          {!! wp_get_attachment_image($image, \App\home_image_size($fields ?? null), false, \App\home_image_attrs(['class' => 'w-100 ' . $img_radius], $fields ?? null)) !!}
         @endif
       </div>
     </div>

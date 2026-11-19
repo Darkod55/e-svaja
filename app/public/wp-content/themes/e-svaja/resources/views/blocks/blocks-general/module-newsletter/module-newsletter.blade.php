@@ -17,7 +17,7 @@ if ($fields->use_default_or_custom ?? false) {
       <div class="col-md-6 pe-md-0">
         <div class="p-rel w-100 h-100 pt-sm">
           @if ($image ?? false)
-            {!! wp_get_attachment_image($image, 'full', false, \App\home_image_attrs(['class' => 'bg-img-cover w-100 img-rounded rounded-start'], $fields ?? null)) !!}
+            {!! wp_get_attachment_image($image, \App\home_image_size($fields ?? null), false, \App\home_image_attrs(['class' => 'bg-img-cover w-100 img-rounded rounded-start'], $fields ?? null)) !!}
           @endif
         </div>
       </div>

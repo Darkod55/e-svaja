@@ -112,6 +112,49 @@ function filter_logo_image_src($image, int $attachment_id)
 add_filter('wp_get_attachment_image_src', __NAMESPACE__ . '\\filter_logo_image_src', 10, 2);
 
 /**
+ * Front page only. Rewrites the src WordPress picked, including WooCommerce thumbnails.
+ *
+ * @param array|false $image
+ * @return array|false
+ */
+function filter_homepage_webp_image_src($image)
+{
+    if (! is_front_page() || ! is_array($image) || empty($image[0]) || ! is_string($image[0])) {
+        return $image;
+    }
+
+    $image[0] = homepage_to_webp_url($image[0]);
+
+    return $image;
+}
+
+add_filter('wp_get_attachment_image_src', __NAMESPACE__ . '\\filter_homepage_webp_image_src', 20);
+
+/**
+ * Same swap for every srcset candidate. Scoped to the front page: the file
+ * check is safe elsewhere, but archives would stat every product image.
+ *
+ * @param array<int, array<string, mixed>> $sources
+ * @return array<int, array<string, mixed>>
+ */
+function filter_homepage_webp_srcset($sources)
+{
+    if (! is_front_page() || ! is_array($sources)) {
+        return $sources;
+    }
+
+    foreach ($sources as $width => $source) {
+        if (! empty($source['url']) && is_string($source['url'])) {
+            $sources[$width]['url'] = homepage_to_webp_url($source['url']);
+        }
+    }
+
+    return $sources;
+}
+
+add_filter('wp_calculate_image_srcset', __NAMESPACE__ . '\\filter_homepage_webp_srcset', 20);
+
+/**
  * Optional image attributes passed in from the hard-coded front page.
  * Other pages do not set these properties, so their markup stays the same.
  *
@@ -147,6 +190,73 @@ function home_image_attrs(array $attrs, $fields): array
     }
 
     return $attrs;
+}
+
+/**
+ * Registered size for a homepage image. Other pages keep `full`.
+ *
+ * @param object|mixed $fields
+ */
+function home_image_size($fields, string $default = 'full'): string
+{
+    if (is_object($fields) && ! empty($fields->home_image_size) && is_string($fields->home_image_size)) {
+        return $fields->home_image_size;
+    }
+
+    return $default;
+}
+
+/**
+ * Map an uploads URL to the file on disk. Empty string when it is not an upload.
+ */
+function homepage_upload_file(string $url): string
+{
+    $path = wp_parse_url($url, PHP_URL_PATH);
+    if (! is_string($path) || $path === '') {
+        return '';
+    }
+
+    $uploads = wp_upload_dir();
+    $base_path = wp_parse_url($uploads['baseurl'] ?? '', PHP_URL_PATH);
+    if (! is_string($base_path) || $base_path === '') {
+        $base_path = '/wp-content/uploads';
+    }
+    $base_path = rtrim($base_path, '/');
+    $pos = strpos($path, $base_path . '/');
+    if ($pos === false) {
+        return '';
+    }
+
+    $relative = substr($path, $pos + strlen($base_path) + 1);
+
+    return trailingslashit($uploads['basedir']) . $relative;
+}
+
+/**
+ * Swap a jpg/png/gif uploads URL for its `.webp` sibling when that file exists.
+ * Files that are already WebP (the hero banner, the Palanga vase) are unchanged.
+ * A missing sibling keeps the original URL so live servers without the files still work.
+ */
+function homepage_to_webp_url(string $url): string
+{
+    static $cache = [];
+
+    if (isset($cache[$url])) {
+        return $cache[$url];
+    }
+
+    $cache[$url] = $url;
+    $path = wp_parse_url($url, PHP_URL_PATH);
+    if (! is_string($path) || ! preg_match('/\.(jpe?g|png|gif)$/i', $path)) {
+        return $cache[$url];
+    }
+
+    $file = homepage_upload_file($url);
+    if ($file !== '' && is_file($file . '.webp')) {
+        $cache[$url] = $url . '.webp';
+    }
+
+    return $cache[$url];
 }
 
 /**
@@ -246,6 +356,9 @@ HTML,
                     'target' => '',
                 ],
                 'home_image_alt' => 'Palanga tall glass vase and decorative plate',
+                // Half of the container from the md breakpoint. Stops the 1200w file loading for a ~50vw slot.
+                'home_image_sizes' => '(min-width: 768px) 50vw, 100vw',
+                'home_image_size' => 'large',
             ]),
             'block' => [
                 'title' => 'Module Offer',
@@ -263,6 +376,8 @@ HTML,
                 // Truthy so the module renders the existing newsletter form partial.
                 'svaja_form' => true,
                 'home_image_alt' => 'Ollie the elephant, a hand-blown Svaja glass sculpture',
+                'home_image_sizes' => '(min-width: 768px) 50vw, 100vw',
+                'home_image_size' => 'large',
             ]),
             'block' => [
                 'title' => 'Module Newsletter',
@@ -290,6 +405,8 @@ HTML,
                     'target' => '',
                 ],
                 'home_image_alt' => 'Svaja gift card',
+                'home_image_sizes' => '(min-width: 992px) 42vw, (min-width: 768px) 50vw, 100vw',
+                'home_image_size' => 'large',
             ]),
             'block' => [
                 'title' => 'Module Gift Card',
@@ -324,6 +441,9 @@ HTML,
                 'image_radius' => 'rounded',
                 'columns' => '8-4',
                 'layout' => 'flex-row',
+                // col-lg-3 in a 1320px container is about a quarter of the viewport.
+                'home_image_sizes' => '(min-width: 992px) 25vw, (min-width: 768px) 50vw, 100vw',
+                'home_image_size' => 'medium_large',
             ]),
             'block' => [
                 'title' => 'Module Two Columns Text Image',
@@ -349,8 +469,11 @@ function homepage_preload_hero(): void
         return;
     }
 
+    $src = homepage_to_webp_url($src);
     $srcset = wp_get_attachment_image_srcset($id, 'full');
-    $type = get_post_mime_type($id) ?: 'image/webp';
+    $type = str_ends_with(strtolower((string) wp_parse_url($src, PHP_URL_PATH)), '.webp')
+        ? 'image/webp'
+        : (get_post_mime_type($id) ?: 'image/webp');
 
     echo '<link rel="preload" as="image" href="' . esc_url($src) . '"';
     if ($srcset) {
@@ -388,11 +511,23 @@ function homepage_lcp_attributes(array $loading_attrs, string $tag_name, array $
         return $loading_attrs;
     }
 
+    if (! is_front_page()) {
+        return $loading_attrs;
+    }
+
     // The header SVG is eager, but it must not take the hero's LCP priority.
-    if (is_front_page() && str_contains($class, 'site-logo')) {
+    if (str_contains($class, 'site-logo')) {
         $loading_attrs['loading'] = 'eager';
         $loading_attrs['fetchpriority'] = 'low';
+
+        return $loading_attrs;
     }
+
+    // Everything else on the homepage is below the hero, including product
+    // cards printed by WooCommerce's own thumbnail function.
+    $loading_attrs['loading'] = 'lazy';
+    $loading_attrs['decoding'] = 'async';
+    $loading_attrs['fetchpriority'] = 'low';
 
     return $loading_attrs;
 }
@@ -400,18 +535,17 @@ function homepage_lcp_attributes(array $loading_attrs, string $tag_name, array $
 add_filter('wp_get_loading_optimization_attributes', __NAMESPACE__ . '\\homepage_lcp_attributes', 10, 3);
 
 /**
- * Product thumbnails sit under a full-bleed hero, so they are not the LCP
- * image, but the first row can still meet a tall viewport. Keep them eager
- * and do not let WordPress hand them fetchpriority=high.
+ * WooCommerce loop thumbnails. Lazy even if an older WooCommerce build skips
+ * wp_get_loading_optimization_attributes.
  *
  * @param array<string, string> $attrs
  * @return array<string, string>
  */
 function homepage_product_image_attrs(array $attrs): array
 {
-    $attrs['loading'] = 'eager';
+    $attrs['loading'] = 'lazy';
     $attrs['decoding'] = 'async';
-    unset($attrs['fetchpriority']);
+    $attrs['fetchpriority'] = 'low';
 
     return $attrs;
 }
@@ -426,6 +560,9 @@ function homepage_drop_assets(): void
         'woocommerce-paypal-payments/assets/ppcp-blocks',
         'woolentor-blocks/assets/css/blocks.style.build.css',
         'woocommerce/assets/css/photoswipe/',
+        'woocommerce/assets/css/woocommerce.css',
+        'woocommerce/assets/css/woocommerce-layout.css',
+        'woocommerce/assets/css/woocommerce-smallscreen.css',
         'woolentor-addons/includes/modules/quickview/assets/css/',
         'woo-custom-product-addons-pro/assets/css/',
         'woocommerce/assets/client/blocks/',
@@ -506,6 +643,196 @@ add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\homepage_drop_assets', 999);
 add_action('wp_print_styles', __NAMESPACE__ . '\\homepage_drop_assets', 1);
 add_action('wp_print_scripts', __NAMESPACE__ . '\\homepage_drop_assets', 1);
 add_action('wp_footer', __NAMESPACE__ . '\\homepage_drop_assets', 0);
+
+/**
+ * Handles the homepage does not need. WooCommerce pulls jquery-blockui and
+ * js-cookie back in as dependencies of woocommerce.js, so dequeuing them is
+ * not enough: they have to be taken out of the final print list.
+ *
+ * @return array<int, string>
+ */
+function homepage_script_src_needles(): array
+{
+    return [
+        'jquery-migrate',
+        'jquery-blockui',
+        'jquery.blockUI',
+        '/js-cookie/',
+        'js.cookie',
+        '/woocommerce/assets/js/frontend/woocommerce.',
+        '/woocommerce/assets/js/frontend/add-to-cart',
+        '/woocommerce/assets/js/frontend/cart-fragments',
+        '/woocommerce/assets/js/frontend/single-product',
+        '/woocommerce/assets/js/frontend/order-attribution',
+        '/woocommerce/assets/js/zoom/',
+        '/woocommerce/assets/js/flexslider/',
+        '/woocommerce/assets/js/photoswipe/',
+        '/woocommerce/assets/js/sourcebuster/',
+        'woolentor-addons/assets/js/slick',
+        'woolentor-addons/includes/modules/quickview/',
+        'woo-custom-product-addons-pro/assets/js/',
+        'woocommerce/assets/client/blocks/',
+        '/wp-includes/js/thickbox/',
+        '/wp-includes/js/underscore.min.js',
+        '/wp-includes/js/wp-util.min.js',
+        '/wp-includes/js/dist/',
+    ];
+}
+
+/**
+ * @param array<int, string> $handles
+ * @return array<int, string>
+ */
+function homepage_filter_print_scripts(array $handles): array
+{
+    if (! is_front_page()) {
+        return $handles;
+    }
+
+    $scripts = wp_scripts();
+    $needles = homepage_script_src_needles();
+    $drop_handles = [
+        'jquery-migrate',
+        'jquery-blockui',
+        'js-cookie',
+        'woocommerce',
+        'wc-add-to-cart',
+        'wc-cart-fragments',
+        'wc-add-to-cart-variation',
+        'wc-single-product',
+        'wc-zoom',
+        'wc-flexslider',
+        'photoswipe',
+        'photoswipe-ui-default',
+        'sourcebuster-js',
+        'wc-order-attribution',
+    ];
+
+    return array_values(array_filter($handles, static function ($handle) use ($scripts, $needles, $drop_handles) {
+        if (in_array($handle, $drop_handles, true)) {
+            return false;
+        }
+        $src = $scripts->registered[$handle]->src ?? '';
+        if (! is_string($src) || $src === '') {
+            return true;
+        }
+        foreach ($needles as $needle) {
+            if (str_contains($src, $needle)) {
+                return false;
+            }
+        }
+
+        return true;
+    }));
+}
+
+add_filter('print_scripts_array', __NAMESPACE__ . '\\homepage_filter_print_scripts');
+
+add_action('wp_enqueue_scripts', static function () {
+    if (! is_front_page()) {
+        return;
+    }
+    $scripts = wp_scripts();
+    if (isset($scripts->registered['jquery'])) {
+        $scripts->registered['jquery']->deps = array_values(array_diff(
+            (array) $scripts->registered['jquery']->deps,
+            ['jquery-migrate']
+        ));
+    }
+}, 1000);
+
+/**
+ * Tiny loader. The library itself is not requested until idle or the first input.
+ */
+function homepage_idle_loader(string $src, string $id): string
+{
+    $src_json = wp_json_encode($src);
+
+    return '<script id="' . esc_attr($id) . '">(function(){var s=' . $src_json . ';var done=false;function l(){if(done)return;done=true;var e=document.createElement("script");e.src=s;e.async=true;document.head.appendChild(e);}["pointerdown","keydown","scroll","touchstart"].forEach(function(ev){window.addEventListener(ev,l,{once:true,passive:true});});if("requestIdleCallback"in window){requestIdleCallback(l,{timeout:4000});}else{setTimeout(l,4000);}})();</script>';
+}
+
+/**
+ * Keep the gtag dataLayer stub, but do not download gtag.js during first paint.
+ *
+ * @param string $tag
+ */
+function homepage_delay_gtag($tag, string $handle, string $src): string
+{
+    if (! is_front_page() || ! is_string($tag) || ! is_string($src)) {
+        return $tag;
+    }
+    if (! str_contains($src, 'googletagmanager.com/gtag/js') && ! str_contains($src, 'googletagmanager.com/gtm.js')) {
+        return $tag;
+    }
+
+    $tag = (string) preg_replace(
+        '#<script\b[^>]*\bsrc=["\'][^"\']*googletagmanager\.com/(?:gtag/js|gtm\.js)[^"\']*["\'][^>]*>\s*</script>#i',
+        '',
+        $tag,
+        1
+    );
+
+    return $tag . homepage_idle_loader($src, 'google_gtagjs-delayed');
+}
+
+add_filter('script_loader_tag', __NAMESPACE__ . '\\homepage_delay_gtag', 20, 3);
+
+/**
+ * The Zoho form HTML is stored in an option. Leave the form and its validation
+ * inline, and load only the analytics servlet the same way as gtag.
+ *
+ * @param mixed $content
+ * @return mixed
+ */
+function homepage_delay_zoho_analytics($content)
+{
+    if (! is_front_page() || ! is_string($content) || ! str_contains($content, 'crm.zohopublic.com')) {
+        return $content;
+    }
+
+    return preg_replace_callback(
+        '#<script\b[^>]*\bsrc=(["\'])([^"\']*crm\.zohopublic\.com[^"\']*)\1[^>]*>\s*</script>#i',
+        static function (array $match): string {
+            $src = html_entity_decode($match[2], ENT_QUOTES);
+
+            return homepage_idle_loader($src, 'zoho-analytics-delayed');
+        },
+        $content
+    );
+}
+
+add_filter('the_content_lite', __NAMESPACE__ . '\\homepage_delay_zoho_analytics', 99);
+
+/**
+ * Printed immediately after jQuery, before the theme bundle.
+ * The no-op covers a .slick() call once woolentor's copy is gone.
+ * The click listener drives the CSS category row.
+ */
+function homepage_slider_script(): void
+{
+    if (! is_front_page()) {
+        return;
+    }
+
+    $js = <<<'JS'
+window.jQuery && (jQuery.fn.slick = jQuery.fn.slick || function () { return this; });
+document.addEventListener('click', function (event) {
+  var target = event.target;
+  if (!target || !target.closest) return;
+  var control = target.closest('#icon-slick-left, #icon-slick-right');
+  if (!control) return;
+  var slider = document.querySelector('.home-cat-scroll');
+  if (!slider) return;
+  var box = slider.querySelector('.cat-box');
+  var delta = box ? box.getBoundingClientRect().width : slider.clientWidth;
+  slider.scrollBy({ left: control.id === 'icon-slick-left' ? -delta : delta, behavior: 'smooth' });
+});
+JS;
+
+    wp_add_inline_script('jquery', $js, 'after');
+}
+
+add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\homepage_slider_script', 1001);
 
 /**
  * Product-addon and similar plugins echo a large style block from wp_head.
