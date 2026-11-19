@@ -752,7 +752,128 @@ function homepage_idle_loader(string $src, string $id): string
 }
 
 /**
- * Keep the gtag dataLayer stub, but do not download gtag.js during first paint.
+ * Rank Math's Analytics module (and gtag.js / gtm.js generally).
+ */
+function homepage_is_gtag_loader(string $src, string $id = ''): bool
+{
+    if ($id === 'google_gtagjs') {
+        return $src !== '';
+    }
+
+    return str_contains($src, 'googletagmanager.com/gtag/js')
+        || str_contains($src, 'googletagmanager.com/gtm.js');
+}
+
+/**
+ * Rank Math Pro prints the loader with wp_print_script_tag() (id="google_gtagjs"),
+ * which never passes through script_loader_tag. Strip the src here so the
+ * browser cannot fetch it while the tag is being built.
+ *
+ * @param array<string, mixed> $attributes
+ * @return array<string, mixed>
+ */
+function homepage_strip_gtag_script_attributes(array $attributes): array
+{
+    if (! is_front_page()) {
+        return $attributes;
+    }
+
+    $src = isset($attributes['src']) ? (string) $attributes['src'] : '';
+    $id = isset($attributes['id']) ? (string) $attributes['id'] : '';
+    if ($src === '' || ! homepage_is_gtag_loader($src, $id)) {
+        return $attributes;
+    }
+
+    $GLOBALS['esvaja_gtag_src'] = $src;
+    unset($attributes['src'], $attributes['async']);
+    $attributes['id'] = 'google_gtagjs-blocked';
+    $attributes['type'] = 'text/plain';
+
+    return $attributes;
+}
+
+add_filter('wp_script_attributes', __NAMESPACE__ . '\\homepage_strip_gtag_script_attributes');
+
+/**
+ * Replace a directly printed gtag loader and keep google_gtagjs-inline untouched.
+ * The inline block is the dataLayer / gtag('config') queue and must run immediately.
+ */
+function homepage_rewrite_gtag_markup(string $html): string
+{
+    $html = (string) preg_replace_callback(
+        '#<script\b([^>]*)>\s*</script>#i',
+        static function (array $match): string {
+            $attrs = $match[1];
+            $id = '';
+            if (preg_match('#\bid=(["\'])([^"\']+)\1#i', $attrs, $id_match)) {
+                $id = $id_match[2];
+            }
+            if (! preg_match('#\bsrc=(["\'])([^"\']+)\1#i', $attrs, $src_match)) {
+                if ($id === 'google_gtagjs' || $id === 'google_gtagjs-blocked') {
+                    return '';
+                }
+
+                return $match[0];
+            }
+
+            $src = html_entity_decode($src_match[2], ENT_QUOTES);
+            if (! homepage_is_gtag_loader($src, $id)) {
+                return $match[0];
+            }
+
+            $GLOBALS['esvaja_gtag_src'] = $src;
+
+            return '';
+        },
+        $html
+    );
+
+    if (! empty($GLOBALS['esvaja_gtag_src']) && ! str_contains($html, 'google_gtagjs-delayed')) {
+        $html .= homepage_idle_loader((string) $GLOBALS['esvaja_gtag_src'], 'google_gtagjs-delayed');
+    }
+
+    return $html;
+}
+
+/**
+ * Capture wp_head on the front page. Rank Math echoes the tag during that hook.
+ */
+function homepage_gtag_buffer_start(): void
+{
+    if (! is_front_page()) {
+        return;
+    }
+
+    ob_start();
+    $GLOBALS['esvaja_gtag_ob_level'] = ob_get_level();
+}
+
+function homepage_gtag_buffer_end(): void
+{
+    if (! is_front_page() || empty($GLOBALS['esvaja_gtag_ob_level'])) {
+        return;
+    }
+
+    $target = (int) $GLOBALS['esvaja_gtag_ob_level'];
+    unset($GLOBALS['esvaja_gtag_ob_level']);
+
+    while (ob_get_level() > $target) {
+        ob_end_flush();
+    }
+
+    if (ob_get_level() !== $target) {
+        return;
+    }
+
+    $html = ob_get_clean();
+    echo homepage_rewrite_gtag_markup(is_string($html) ? $html : '');
+}
+
+add_action('wp_head', __NAMESPACE__ . '\\homepage_gtag_buffer_start', -9999);
+add_action('wp_head', __NAMESPACE__ . '\\homepage_gtag_buffer_end', PHP_INT_MAX);
+
+/**
+ * Enqueued gtag (not Rank Math's direct print) still goes through this filter.
  *
  * @param string $tag
  */
@@ -761,16 +882,22 @@ function homepage_delay_gtag($tag, string $handle, string $src): string
     if (! is_front_page() || ! is_string($tag) || ! is_string($src)) {
         return $tag;
     }
-    if (! str_contains($src, 'googletagmanager.com/gtag/js') && ! str_contains($src, 'googletagmanager.com/gtm.js')) {
+    if (! homepage_is_gtag_loader($src, $handle)) {
         return $tag;
     }
 
     $tag = (string) preg_replace(
-        '#<script\b[^>]*\bsrc=["\'][^"\']*googletagmanager\.com/(?:gtag/js|gtm\.js)[^"\']*["\'][^>]*>\s*</script>#i',
+        '#<script\b[^>]*\bsrc=["\'][^"\']*(?:googletagmanager\.com/(?:gtag/js|gtm\.js))[^"\']*["\'][^>]*>\s*</script>#i',
         '',
         $tag,
         1
     );
+
+    if (! empty($GLOBALS['esvaja_gtag_ob_level'])) {
+        $GLOBALS['esvaja_gtag_src'] = $src;
+
+        return $tag;
+    }
 
     return $tag . homepage_idle_loader($src, 'google_gtagjs-delayed');
 }
