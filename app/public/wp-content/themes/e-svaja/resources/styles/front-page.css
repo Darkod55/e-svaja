@@ -1,0 +1,77 @@
+/*
+ * Front page only. Plain CSS so it does not need a bud rebuild.
+ *
+ * The hero image is 1280×720 and is pulled out of flow by .img-cover
+ * (object-fit cover, and in this theme position absolute inside
+ * .module-layout-2). Width/height on the img then do not reserve the
+ * section. The block also uses mxh-lg-100, so on large screens the banner
+ * is capped at the viewport. Reserve that box up front.
+ *
+ * 100svh is used instead of 100vh so the mobile browser chrome does not
+ * change the hero height after load.
+ */
+
+.home-hero.block-module-hero-image {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: max(36rem, min(56.25vw, 100svh));
+}
+
+@media (min-width: 992px) {
+  .home-hero.block-module-hero-image {
+    height: min(56.25vw, 100svh);
+    min-height: min(56.25vw, 100svh);
+  }
+}
+
+.home-hero.block-module-hero-image > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  aspect-ratio: 1280 / 720;
+}
+
+.home-hero.block-module-hero-image .video-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* The promo bar is in the first HTML, but a webfont swap can still grow it. */
+#notf-bar {
+  min-height: 2.75rem;
+}
+
+/*
+ * Category slick starts the slides stacked, then rewrites them into a row.
+ * Match data-slick (6 / 3 / 1) before .slick-initialized so that jump does
+ * not move the rest of the page. Initialized slick keeps the theme rules.
+ */
+.block-module-categories .slider-cats:not(.slick-initialized) {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.block-module-categories .slider-cats:not(.slick-initialized) > .cat-box {
+  flex: 0 0 calc(100% / 6);
+  max-width: calc(100% / 6);
+}
+
+@media (max-width: 1024px) {
+  .block-module-categories .slider-cats:not(.slick-initialized) > .cat-box {
+    flex-basis: calc(100% / 3);
+    max-width: calc(100% / 3);
+  }
+}
+
+@media (max-width: 767px) {
+  .block-module-categories .slider-cats:not(.slick-initialized) > .cat-box {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}

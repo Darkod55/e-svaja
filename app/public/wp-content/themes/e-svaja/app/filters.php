@@ -40,9 +40,22 @@ add_action( 'enqueue_block_editor_assets', function(){
 });
 
 add_action( 'wp_head', function () {
+  // Only spend a connection on Google Fonts when a stylesheet is actually queued.
+  // Self-hosted faces live in the theme CSS and do not need this.
+  $uses_google_fonts = false;
+  foreach ( (array) wp_styles()->queue as $handle ) {
+    $src = wp_styles()->registered[ $handle ]->src ?? '';
+    if ( is_string( $src ) && ( str_contains( $src, 'fonts.googleapis.com' ) || str_contains( $src, 'fonts.gstatic.com' ) ) ) {
+      $uses_google_fonts = true;
+      break;
+    }
+  }
+  if ( ! $uses_google_fonts ) {
+    return;
+  }
   echo '<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>';
   echo '<link rel="preconnect" href="https://fonts.googleapis.com/" crossorigin>';
-} );
+}, 1 );
 
 add_filter( 'woocommerce_package_rates', function ( $rates, $package ) {
   // Only unset rates if free_shipping is available
