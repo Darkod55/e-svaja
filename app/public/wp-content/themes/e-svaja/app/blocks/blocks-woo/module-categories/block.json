@@ -1,0 +1,27 @@
+{
+  "name": "acf/module-categories",
+  "title": "Module Categories",
+  "description": "Module that shows the product categories in a slider.",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["text"],
+  "script": ["module-categories"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-categories.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {
+        "preview_image_help" : "/wp-content/themes/e-svaja/resources/block-preview-images/module-categories-screenshot.jpg"
+      }
+    }
+  }
+}

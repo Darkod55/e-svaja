@@ -1,0 +1,28 @@
+{
+  "name": "acf/module-two-columns-with-icon",
+  "title": "Module Two Columns With Icon",
+  "description": "In this module you can add two columns, with text in one and image in the other. You can also control the layout and the column size.",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["image, text"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-two-columns-with-icon.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {
+        "content": "<h2>Main title goes here</h2> Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        "image": 25919,
+        "preview_image_help" : "/wp-content/themes/e-svaja/resources/block-preview-images/module-two-columns-with-icon-screenshot.jpg"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "acf/module-hero",
+  "title": "Module Hero",
+  "description": "This is a default hero module, with the option to add text content and image",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["colours"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-hero.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {
+        "content": "<h1>Main title goes here</h1> Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        "image": 25698,
+        "preview_image_help": "/wp-content/themes/e-svaja/resources/block-preview-images/module-hero-screenshot.jpg"
+      }
+    }
+  }
+}

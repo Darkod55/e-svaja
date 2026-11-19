@@ -1,0 +1,17 @@
+<?php
+/**
+ * Loads the blade partials from the View directory.
+ *
+ * - includes the main corresponding blade partial for the block
+ * - conditionally loads the footer icons partial if in the WP editor
+ */
+$sliderId = uniqid();
+if( isset( $block['data']['preview_image_help'] )  ) {
+  echo '<img src="'. site_url() . $block['data']['preview_image_help'] .'" style="width: 100%; height:auto;">';
+  echo (function_exists('get_current_screen')) ? view('components/footer-icons') : '';
+} else {
+  echo isset($block) ? view('blocks/blocks-woo/module-categories/module-categories', ['block' => $block, 'slider_id' => $sliderId]) : '';
+  if (function_exists('get_current_screen')) {
+    ?>
+    <script type="text/javascript">var sliderId = "<?= $sliderId ?>";</script>
+  <?php }}; ?>

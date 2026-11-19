@@ -1,0 +1,12 @@
+<?php
+/**
+ * Loads the blade partials from the View directory.
+ *
+ * - includes the main corresponding blade partial for the block
+ * - conditionally loads the footer icons partial if in the WP editor
+ */
+if( isset( $block['data']['preview_image_help'] )  ) {
+  echo '<img src="'. site_url() . $block['data']['preview_image_help'] .'" style="width: 100%; height:auto;">';
+} else {
+  echo isset($block) ? view('blocks/blocks-general/module-two-columns-with-icon/module-two-columns-with-icon', ['block' => $block]) : '';
+}

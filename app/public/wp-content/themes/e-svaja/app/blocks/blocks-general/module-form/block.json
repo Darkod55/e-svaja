@@ -1,0 +1,28 @@
+{
+  "name": "acf/module-form",
+  "title": "Module Form",
+  "description": "This module includes the option for adding content, a Contact Form 7 form and an image.",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["form"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-form.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {
+        "content": "<h2>Placeholder Title</h2> Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        "svaja_form": 26024,
+        "preview_image_help": "/wp-content/themes/e-svaja/resources/block-preview-images/module-form-screenshot.jpg"
+      }
+    }
+  }
+}

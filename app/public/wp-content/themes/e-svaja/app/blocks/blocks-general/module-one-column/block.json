@@ -1,0 +1,24 @@
+{
+  "name": "acf/module-one-column",
+  "title": "Module One Column",
+  "description": "Module one Column",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["column"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-one-column.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {}
+    }
+  }
+}

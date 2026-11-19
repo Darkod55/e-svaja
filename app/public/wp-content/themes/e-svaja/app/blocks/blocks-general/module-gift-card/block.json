@@ -1,0 +1,32 @@
+{
+  "name": "acf/module-gift-card",
+  "title": "Module Gift Card",
+  "description": "In this module you can use the default gift card data, controlled in Site Options, or add custom data yourself.",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["image, text"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-gift-card.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {
+        "content": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        "image": 26026,
+         "link": {
+          "url": "#",
+          "title": "Get a gift card"
+        },
+        "preview_image_help" : "/wp-content/themes/e-svaja/resources/block-preview-images/module-gift-card-screenshot.jpg"
+      }
+    }
+  }
+}

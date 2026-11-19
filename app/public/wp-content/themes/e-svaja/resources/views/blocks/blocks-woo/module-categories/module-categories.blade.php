@@ -1,0 +1,22 @@
+<?php 
+$categories = get_terms( 'product_cat');
+?>
+@if ($categories ?? false)
+<section class="block-{!! App\Helpers()->kebabCase($block['title']) ?? 'categories' !!} ovf-hidden p-clamp-xl-y">
+  <div class="container-xxl p-clamp-x">
+    <h2>Find what you are looking for</h2>
+    <div class="row p-rel">
+      <div id="icon-slick-left">@svgIcon('chevron-left|20|20')</div>  
+      <div id="slider-categories-{{ $slider_id }}" class="slider-cats col-12 col-for-products" data-slick="{{ json_encode(['slidesToShow' => 6, 'slidesToScroll' => 1,'dots' => false, 'arrows' => false, 'responsive' => [['breakpoint' => 1024, 'settings' => ['slidesToShow' => 3]], ['breakpoint' => 767, 'settings' => ['slidesToShow' => 1]]]]) }}">
+        @foreach ($categories as $cat)
+          <div class="cat-box p-rel text-center d-flex flex-column flex-center">
+            {!! wp_get_attachment_image(get_woocommerce_term_meta($cat->term_id, 'thumbnail_id', true), 'full', '') !!}
+            <a href="{!! get_term_link($cat->term_id) !!}" class="h6 stretched-link card-title text-black">{!! $cat->name !!}</a>
+          </div>
+        @endforeach
+      </div>
+      <div id="icon-slick-right">@svgIcon('chevron-right|20|20')</div>  
+    </div>
+  </div>
+</section>
+@endif

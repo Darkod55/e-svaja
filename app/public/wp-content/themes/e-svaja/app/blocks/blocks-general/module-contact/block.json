@@ -1,0 +1,29 @@
+{
+  "name": "acf/module-contact",
+  "title": "Module Contact",
+  "description": "In this module we have the main contact information listed, which are controlled from Site Options, content field and the option to chose the form.",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["contact"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-contact.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {
+        "content": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        "image": 140,
+        "svaja_form": 26024,
+        "preview_image_help": "/wp-content/themes/e-svaja/resources/block-preview-images/module-contact-screenshot.jpg"
+      }
+    }
+  }
+}

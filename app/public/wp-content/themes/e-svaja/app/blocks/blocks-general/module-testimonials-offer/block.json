@@ -1,0 +1,34 @@
+{
+  "name": "acf/module-testimonials-offer",
+  "title": "Module Testimonials & Offer",
+  "description": "Module where you can add testimonials on the left site, and like a promo card on the right.",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["colours"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-testimonials-offer.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {
+        "block_title": "Title goes here",
+        "content": "<h2>Placeholder Title</h2> Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        "image": 63,
+        "testimonials": {
+          "0": 730,
+          "1": 730,
+          "2": 730
+        },
+        "preview_image_help" : "/wp-content/themes/e-svaja/resources/block-preview-images/module-testimonials-offer-screenshot.jpg"
+      }
+    }
+  }
+}

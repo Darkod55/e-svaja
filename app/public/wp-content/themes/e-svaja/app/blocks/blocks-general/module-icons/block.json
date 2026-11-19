@@ -1,0 +1,28 @@
+{
+  "name": "acf/module-icons",
+  "title": "Module Icons",
+  "description": "In this module you can two columns with text, and select an icon for each one.",
+  "category": "text",
+  "icon": "admin-comments",
+  "style": [ "file:@asset('styles/app.css')" ],
+  "keywords": ["image, text"],
+  "supports": {
+    "anchor": true,
+    "customClassName": true
+  },
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "module-icons.php"
+  },
+  "align": "full",
+  "example": {
+    "attributes": {
+      "mode": "preview",
+      "data": {
+        "content_left": "<h2>Main title goes here</h2> Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        "content_right": "<h2>Main title goes here</h2> Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        "preview_image_help" : "/wp-content/themes/e-svaja/resources/block-preview-images/module-icons-screenshot.jpg"
+      }
+    }
+  }
+}
