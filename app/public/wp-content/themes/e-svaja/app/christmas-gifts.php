@@ -47,6 +47,7 @@ function christmas_gifts_sections(): array
         ],
         [
             'heading' => '£100–£200',
+            'band' => true,
             'items' => [
                 christmas_gifts_item(
                     'Edvinas & Edita',
@@ -392,6 +393,59 @@ function christmas_gifts_render_card(array $item): void
     }
 }
 
+/**
+ * Attachment 33507 is the page hero and the LCP image. Empty string when it is missing.
+ */
+function christmas_gifts_hero_image(): string
+{
+    $id = 33507;
+    if (! function_exists('wp_get_attachment_image')) {
+        return '';
+    }
+
+    $alt = '';
+    if (function_exists('get_post_meta')) {
+        $meta = get_post_meta($id, '_wp_attachment_image_alt', true);
+        $alt = is_string($meta) ? trim($meta) : '';
+    }
+    if ($alt === '') {
+        $alt = 'SVAJA Christmas gifts';
+    }
+
+    $html = wp_get_attachment_image($id, 'full', false, [
+        'class' => 'w-100 img-cover christmas-gifts-hero-img',
+        'alt' => $alt,
+        'loading' => 'eager',
+        'fetchpriority' => 'high',
+        'decoding' => 'sync',
+        'sizes' => '100vw',
+    ]);
+
+    return is_string($html) ? $html : '';
+}
+
+function christmas_gifts_render_hero(): void
+{
+    $image = christmas_gifts_hero_image();
+    $title = function_exists('get_the_title') ? get_the_title() : '';
+    $title = is_string($title) ? $title : '';
+    $offer = christmas_gifts_black_friday_line();
+
+    echo '<section class="christmas-gifts-hero p-rel ovf-hidden' . ($image === '' ? ' is-fallback' : '') . '">';
+    if ($image !== '') {
+        echo $image;
+        echo '<div class="christmas-gifts-hero-shade" aria-hidden="true"></div>';
+    }
+    echo '<div class="container-xxl p-clamp zi-1 video-content">';
+    echo '<div class="hero-title t-white border-start ps-4 ps-md-5 border-branded-vertical">';
+    echo '<h1>' . esc_html($title) . '</h1>';
+    if ($offer !== '') {
+        echo '<p class="christmas-gifts-offer">' . esc_html($offer) . '</p>';
+    }
+    echo '<p class="christmas-gifts-intro">Every SVAJA piece is designed in the UK and handmade by skilled glassmakers in European studios, so the gift you choose is individual. Here is our Christmas selection, by budget.</p>';
+    echo '</div></div></section>';
+}
+
 function christmas_gifts_render_missing_card(string $name, string $line): void
 {
     echo '<div class="col-md-6 col-lg-3">';
@@ -403,55 +457,72 @@ function christmas_gifts_render_missing_card(string $name, string $line): void
     echo '</div></div></div></div>';
 }
 
+function christmas_gifts_render_slider(string $heading, array $items): void
+{
+    $label = $heading !== '' ? $heading : 'gifts';
+
+    echo '<div class="christmas-gifts-slider" data-christmas-slider>';
+    echo '<button type="button" class="christmas-gifts-nav christmas-gifts-prev" aria-label="' . esc_attr('Previous gifts in ' . $label) . '">';
+    echo '<span aria-hidden="true">&#8249;</span></button>';
+    echo '<div class="christmas-gifts-track products" tabindex="0">';
+
+    foreach ($items as $item) {
+        if (is_array($item)) {
+            christmas_gifts_render_card($item);
+        }
+    }
+
+    echo '</div>';
+    echo '<button type="button" class="christmas-gifts-nav christmas-gifts-next" aria-label="' . esc_attr('Next gifts in ' . $label) . '">';
+    echo '<span aria-hidden="true">&#8250;</span></button>';
+    echo '</div>';
+}
+
 function christmas_gifts_render(): void
 {
-    $offer = christmas_gifts_black_friday_line();
-    if ($offer !== '') {
-        echo '<p class="christmas-gifts-offer mb-3">' . esc_html($offer) . '</p>';
-    }
-
-    echo '<p class="mb-4">Every SVAJA piece is designed in the UK and handmade by skilled glassmakers in European studios, so the gift you choose is individual. Here is our Christmas selection, by budget.</p>';
-
-    if (function_exists('wc_set_loop_prop')) {
-        wc_set_loop_prop('columns', 4);
-    }
-
     foreach (christmas_gifts_sections() as $section) {
         $heading = isset($section['heading']) && is_string($section['heading']) ? $section['heading'] : '';
         $items = isset($section['items']) && is_array($section['items']) ? $section['items'] : [];
+        $band = ! empty($section['band']);
 
-        echo '<section class="mb-5">';
+        echo '<section class="' . ($band ? 'christmas-gifts-band' : 'christmas-gifts-section') . '">';
+        if ($band) {
+            echo '<div class="container-xxl p-clamp-x">';
+        }
         echo '<h2 class="mb-3">' . esc_html($heading) . '</h2>';
-        echo '<div class="row"><div class="col-12 col-for-products"><div class="woocommerce">';
-
-        if (function_exists('woocommerce_product_loop_start')) {
-            woocommerce_product_loop_start();
-        } else {
-            echo '<div class="products row g-4">';
-        }
-
-        foreach ($items as $item) {
-            if (is_array($item)) {
-                christmas_gifts_render_card($item);
-            }
-        }
-
-        if (function_exists('woocommerce_product_loop_end')) {
-            woocommerce_product_loop_end();
-        } else {
+        echo '<div class="col-for-products"><div class="woocommerce">';
+        christmas_gifts_render_slider($heading, $items);
+        echo '</div></div>';
+        if ($band) {
             echo '</div>';
         }
-
-        echo '</div></div></div></section>';
+        echo '</section>';
     }
 
     $gift = christmas_gifts_gift_card();
     $gift_url = christmas_gifts_permalink($gift);
-    echo '<section class="christmas-gifts-cta mb-5"><p class="mb-0">Not sure what they would choose? ';
-    if ($gift_url !== '') {
-        echo '<a href="' . esc_url($gift_url) . '">The £75 SVAJA Gift Card</a>';
-    } else {
-        echo 'The £75 SVAJA Gift Card';
+    $image_id = 0;
+    if (is_object($gift) && method_exists($gift, 'get_image_id')) {
+        $raw_image = $gift->get_image_id();
+        $image_id = is_numeric($raw_image) ? (int) $raw_image : 0;
     }
-    echo ' lets them decide.</p></section>';
+
+    echo '<section class="christmas-gifts-cta mb-5">';
+    if ($image_id > 0 && function_exists('wp_get_attachment_image')) {
+        $card_image = wp_get_attachment_image($image_id, 'medium', false, [
+            'class' => 'christmas-gifts-cta-img',
+            'alt' => 'SVAJA Gift Card',
+            'loading' => 'lazy',
+            'decoding' => 'async',
+        ]);
+        if (is_string($card_image) && $card_image !== '') {
+            echo $card_image;
+        }
+    }
+    echo '<div class="christmas-gifts-cta-copy">';
+    echo '<p>Not sure what they would choose? The £75 SVAJA Gift Card lets them decide.</p>';
+    if ($gift_url !== '') {
+        echo '<a class="btn btn-lg btn-secondary" href="' . esc_url($gift_url) . '">The £75 SVAJA Gift Card</a>';
+    }
+    echo '</div></section>';
 }
