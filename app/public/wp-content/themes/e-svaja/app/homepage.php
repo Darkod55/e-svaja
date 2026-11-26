@@ -485,11 +485,22 @@ function homepage_hero_variant(): string
 }
 
 /**
+ * Phone image for the shared seasonal hero. Desktop and tablet keep the
+ * image set in hero-seasonal.blade.php. The theme's tablet breakpoint is
+ * 768px, so this file is used only below that (max-width: 767.98px).
+ */
+function seasonal_hero_mobile_image_id()
+{
+    return 33519;
+}
+
+/**
  * Preload the hero (LCP) image and stop the front page loading block/plugin
  * assets that the hard-coded template does not render.
  *
  * Only the active hero is preloaded, so the classic banner is not fetched
- * while the seasonal hero is showing.
+ * while the seasonal hero is showing. On a phone the seasonal preload is
+ * attachment 33519; from 768px up it is the desktop seasonal file.
  */
 function homepage_preload_hero(): void
 {
@@ -497,24 +508,61 @@ function homepage_preload_hero(): void
         return;
     }
 
-    $classic = homepage_hero_variant() === 'classic';
-    $id = $classic ? 33435 : 33507;
-    // Classic img src is medium_large. Seasonal uses the full file, matching
-    // the Christmas hero. imagesrcset still offers the other widths.
-    $size = $classic ? 'medium_large' : 'full';
+    if (homepage_hero_variant() === 'classic') {
+        homepage_print_hero_preload(33435, 'medium_large', '');
+
+        return;
+    }
+
+    $desktop_id = 33508;
+    $mobile_id = seasonal_hero_mobile_image_id();
+    $mobile_id = is_numeric($mobile_id) ? (int) $mobile_id : 0;
+    $mobile_src = '';
+    if ($mobile_id > 0 && $mobile_id !== $desktop_id && function_exists('wp_get_attachment_image_url')) {
+        $url = wp_get_attachment_image_url($mobile_id, 'full');
+        $mobile_src = is_string($url) ? $url : '';
+    }
+
+    if ($mobile_src !== '') {
+        homepage_print_hero_preload($mobile_id, 'full', '(max-width: 767.98px)');
+        homepage_print_hero_preload($desktop_id, 'full', '(min-width: 768px)');
+
+        return;
+    }
+
+    homepage_print_hero_preload($desktop_id, 'full', '');
+}
+
+/**
+ * @param mixed $id
+ * @param mixed $size
+ * @param mixed $media
+ */
+function homepage_print_hero_preload($id, $size, $media): void
+{
+    if (! is_numeric($id) || ! is_string($size) || $size === '' || ! function_exists('wp_get_attachment_image_url')) {
+        return;
+    }
+
+    $id = (int) $id;
     $src = wp_get_attachment_image_url($id, $size);
-    if (! $src) {
+    if (! is_string($src) || $src === '') {
         return;
     }
 
     $src = homepage_to_webp_url($src);
-    $srcset = wp_get_attachment_image_srcset($id, $size);
-    $type = str_ends_with(strtolower((string) wp_parse_url($src, PHP_URL_PATH)), '.webp')
+    $srcset = function_exists('wp_get_attachment_image_srcset') ? wp_get_attachment_image_srcset($id, $size) : '';
+    $srcset = is_string($srcset) ? $srcset : '';
+    $path = wp_parse_url($src, PHP_URL_PATH);
+    $type = is_string($path) && str_ends_with(strtolower($path), '.webp')
         ? 'image/webp'
         : (get_post_mime_type($id) ?: 'image/webp');
 
     echo '<link rel="preload" as="image" href="' . esc_url($src) . '"';
-    if ($srcset) {
+    if (is_string($media) && $media !== '') {
+        echo ' media="' . esc_attr($media) . '"';
+    }
+    if ($srcset !== '') {
         echo ' imagesrcset="' . esc_attr($srcset) . '" imagesizes="100vw"';
     }
     echo ' type="' . esc_attr($type) . '" fetchpriority="high">' . "\n";

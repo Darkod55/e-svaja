@@ -5,6 +5,9 @@
 --}}
 @php
 $image_id = 33508; //isset($image_id) && is_numeric($image_id) ? (int) $image_id : 0;
+// Phone only, below the theme's 768px tablet breakpoint. Desktop/tablet stay on $image_id.
+$mobile_image_id = \App\seasonal_hero_mobile_image_id();
+$mobile_image_id = is_numeric($mobile_image_id) ? (int) $mobile_image_id : 0;
 $alt = '';
 if ($image_id > 0 && function_exists('get_post_meta')) {
     $meta = get_post_meta($image_id, '_wp_attachment_image_alt', true);
@@ -12,6 +15,21 @@ if ($image_id > 0 && function_exists('get_post_meta')) {
 }
 if ($alt === '') {
     $alt = isset($alt_fallback) && is_string($alt_fallback) ? $alt_fallback : '';
+}
+$mobile_srcset = '';
+if ($mobile_image_id > 0 && $mobile_image_id !== (int) $image_id && function_exists('wp_get_attachment_image_url')) {
+    $mobile_url = wp_get_attachment_image_url($mobile_image_id, 'full');
+    if (is_string($mobile_url) && $mobile_url !== '') {
+        $mobile_set = function_exists('wp_get_attachment_image_srcset') ? wp_get_attachment_image_srcset($mobile_image_id, 'full') : '';
+        $mobile_srcset = is_string($mobile_set) && $mobile_set !== '' ? $mobile_set : $mobile_url;
+        if (function_exists('get_post_meta')) {
+            $mobile_meta = get_post_meta($mobile_image_id, '_wp_attachment_image_alt', true);
+            $mobile_alt = is_string($mobile_meta) ? trim($mobile_meta) : '';
+            if ($mobile_alt !== '') {
+                $alt = $mobile_alt;
+            }
+        }
+    }
 }
 $image_html = '';
 if ($image_id > 0 && function_exists('wp_get_attachment_image')) {
@@ -35,7 +53,12 @@ $buttons = isset($buttons) && is_array($buttons) ? $buttons : [];
 
 <section class="svaja-seasonal-hero p-rel ovf-hidden{{ $image_html === '' ? ' is-fallback' : '' }}">
   @if ($image_html !== '')
-    {!! $image_html !!}
+    <picture class="svaja-seasonal-hero__media">
+      @if ($mobile_srcset !== '')
+        <source media="(max-width: 767.98px)" srcset="{{ $mobile_srcset }}" sizes="100vw">
+      @endif
+      {!! $image_html !!}
+    </picture>
     <div class="svaja-seasonal-hero__shade" aria-hidden="true"></div>
   @endif
   <div class="svaja-seasonal-hero__copy zi-1">
@@ -81,7 +104,18 @@ $buttons = isset($buttons) && is_array($buttons) ? $buttons : [];
       color: #f5efe6;
     }
 
-    .svaja-seasonal-hero > img {
+    .svaja-seasonal-hero > .svaja-seasonal-hero__media {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+
+    .svaja-seasonal-hero > img,
+    .svaja-seasonal-hero > .svaja-seasonal-hero__media > img {
       position: absolute;
       inset: 0;
       z-index: 0;
@@ -190,9 +224,14 @@ $buttons = isset($buttons) && is_array($buttons) ? $buttons : [];
       color: #212529;
     }
 
-    @media (max-width: 767px) {
+    @media (max-width: 767.98px) {
       .svaja-seasonal-hero {
         min-height: 36rem;
+      }
+
+      .svaja-seasonal-hero > img,
+      .svaja-seasonal-hero > .svaja-seasonal-hero__media > img {
+        object-position: center center;
       }
 
       .svaja-seasonal-hero__shade {
