@@ -226,19 +226,23 @@
       display: none;
     }
 
+    .christmas-gifts .christmas-gifts-track {
+      align-items: stretch;
+    }
+
     .christmas-gifts .christmas-gifts-track > [class*="col-"] {
       display: flex;
       align-items: stretch;
+      align-self: stretch;
     }
 
     .christmas-gifts .christmas-gifts-track .card {
       display: flex;
+      flex: 1 1 auto;
       flex-direction: column;
+      gap: 16px;
       width: 100%;
-    }
-
-    .christmas-gifts .woocommerce-LoopProduct-link {
-      display: block;
+      height: auto;
     }
 
     .christmas-gifts .christmas-gifts-track img {
@@ -251,8 +255,15 @@
       display: flex;
       flex: 1 1 auto;
       flex-direction: column;
-      gap: 12px;
-      padding: 16px 1.5rem 1.5rem;
+      min-height: 0;
+      padding: 0 1.5rem 1.5rem;
+    }
+
+    .christmas-gifts .shop-card > a.woocommerce-LoopProduct-link {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
     }
 
     .christmas-gifts .title-wrap {
@@ -260,22 +271,22 @@
       flex: 1 1 auto;
       flex-direction: column;
       gap: 12px;
+      min-height: 0;
     }
 
-    .christmas-gifts .prod-cat,
-    .christmas-gifts .woocommerce-loop-product__title,
-    .christmas-gifts .christmas-gifts-line,
-    .christmas-gifts .star-rating,
-    .christmas-gifts .price,
-    .christmas-gifts .rating-price-add,
-    .christmas-gifts .rating-price-add .btn {
+    .christmas-gifts .prod-cat {
+      display: inline-block;
+      align-self: flex-start;
+      width: auto;
+      max-width: 100%;
       margin: 0 !important;
     }
 
-    .christmas-gifts .rating-price-add {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    .christmas-gifts .woocommerce-loop-product__title,
+    .christmas-gifts .christmas-gifts-line,
+    .christmas-gifts .price,
+    .christmas-gifts .rating-price-add .btn {
+      margin: 0 !important;
     }
 
     .christmas-gifts .christmas-gifts-line {
@@ -288,6 +299,41 @@
 
     .christmas-gifts a .christmas-gifts-line {
       color: #212529;
+    }
+
+    .christmas-gifts .rating-price-add {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: auto !important;
+    }
+
+    .christmas-gifts .rating-price-add > a.woocommerce-LoopProduct-link {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .christmas-gifts .rating-price-add > a.woocommerce-LoopProduct-link:not(:has(.star-rating))::before {
+      content: "";
+      display: block;
+      height: 1.25rem;
+    }
+
+    .christmas-gifts .star-rating {
+      display: block;
+      position: relative;
+      float: none;
+      overflow: hidden;
+      height: 1.25rem;
+      margin: 0 !important;
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+
+    .christmas-gifts .rating-price-add .btn {
+      align-self: flex-start;
     }
 
     .christmas-gifts .christmas-gifts-cta {
