@@ -424,6 +424,52 @@ function christmas_gifts_hero_image(): string
     return is_string($html) ? $html : '';
 }
 
+/**
+ * Split a WP page title for the hero.
+ * "|" or " – " (en dash) puts the part after the separator on the next line in italics.
+ * Otherwise the latter half of the words, split on a word boundary, is italic.
+ */
+function christmas_gifts_title_html($title): string
+{
+    $title = is_string($title) ? trim(preg_replace('/\s+/', ' ', $title) ?? '') : '';
+    if ($title === '') {
+        return '';
+    }
+
+    $first = $title;
+    $second = '';
+    if (str_contains($title, '|')) {
+        $bits = explode('|', $title, 2);
+        $first = trim($bits[0]);
+        $second = trim($bits[1] ?? '');
+    } elseif (str_contains($title, ' – ')) {
+        $bits = explode(' – ', $title, 2);
+        $first = trim($bits[0]);
+        $second = trim($bits[1] ?? '');
+    } else {
+        $words = preg_split('/\s+/', $title);
+        $words = is_array($words) ? array_values(array_filter($words, static function ($word) {
+            return is_string($word) && $word !== '';
+        })) : [];
+        $count = count($words);
+        if ($count > 1) {
+            $first_count = (int) ceil($count / 2);
+            if ($first_count >= $count) {
+                $first_count = $count - 1;
+            }
+            $first = implode(' ', array_slice($words, 0, $first_count));
+            $second = implode(' ', array_slice($words, $first_count));
+        }
+    }
+
+    $html = esc_html($first);
+    if ($second !== '') {
+        $html .= '<br><em>' . esc_html($second) . '</em>';
+    }
+
+    return $html;
+}
+
 function christmas_gifts_render_hero(): void
 {
     $image = christmas_gifts_hero_image();
@@ -436,14 +482,16 @@ function christmas_gifts_render_hero(): void
         echo $image;
         echo '<div class="christmas-gifts-hero-shade" aria-hidden="true"></div>';
     }
-    echo '<div class="container-xxl p-clamp zi-1 video-content">';
-    echo '<div class="hero-title t-white border-start ps-4 ps-md-5 border-branded-vertical">';
-    echo '<h1>' . esc_html($title) . '</h1>';
+    echo '<div class="christmas-gifts-hero-copy zi-1">';
+    echo '<p class="christmas-gifts-eyebrow">Christmas at SVAJA</p>';
+    echo '<span class="christmas-gifts-rule" aria-hidden="true"></span>';
     if ($offer !== '') {
         echo '<p class="christmas-gifts-offer">' . esc_html($offer) . '</p>';
     }
+    echo '<h1>' . christmas_gifts_title_html($title) . '</h1>';
     echo '<p class="christmas-gifts-intro">Every SVAJA piece is designed in the UK and handmade by skilled glassmakers in European studios, so the gift you choose is individual. Here is our Christmas selection, by budget.</p>';
-    echo '</div></div></section>';
+    echo '<a class="christmas-gifts-hero-btn" href="#under-100">Shop Christmas Gifts</a>';
+    echo '</div></section>';
 }
 
 function christmas_gifts_render_missing_card(string $name, string $line): void
@@ -485,7 +533,8 @@ function christmas_gifts_render(): void
         $items = isset($section['items']) && is_array($section['items']) ? $section['items'] : [];
         $band = ! empty($section['band']);
 
-        echo '<section class="' . ($band ? 'christmas-gifts-band' : 'christmas-gifts-section') . '">';
+        $anchor = $heading === 'Under £100' ? ' id="under-100"' : '';
+        echo '<section' . $anchor . ' class="' . ($band ? 'christmas-gifts-band' : 'christmas-gifts-section') . '">';
         if ($band) {
             echo '<div class="container-xxl p-clamp-x">';
         }
