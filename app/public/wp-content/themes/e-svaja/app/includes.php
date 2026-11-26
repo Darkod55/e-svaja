@@ -34,3 +34,4 @@ foreach (glob(__DIR__ . '/Classes/*.php') as $file) require_once $file;
 
 require_once __DIR__ . '/homepage.php';
 require_once __DIR__ . '/christmas-gifts.php';
+require_once __DIR__ . '/schema.php';
