@@ -14,7 +14,6 @@ $icon_right = ($fields->icon_right['icons'] ?? 'values');
       <div class="col-lg-6 anm8">
         <div class="border rounded-start p-clamp-xl h-100 border-dark">
           {!! App\helpers()->getSvg([ 'icon' => $icon_left, 'width' => 65, 'height' => 65]) !!}
-          @svgIcon($icon_left|65|65)
           <div class="mt-4">
             {!! apply_filters('the_content_lite', $content_left) ?? '' !!}
           </div>

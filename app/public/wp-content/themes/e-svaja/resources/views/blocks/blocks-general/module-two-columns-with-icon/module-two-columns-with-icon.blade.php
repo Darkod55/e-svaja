@@ -14,7 +14,6 @@ $block_layout = ($fields->layout ?? false) ? $fields->layout : 'flex-row';
       <div class="col-lg-6 anm8">
         <div class="border {!! $block_layout == 'flex-row' ? 'rounded-start' : 'rounded-end' !!} p-clamp-xl h-100 border-dark">
           {!! App\helpers()->getSvg([ 'icon' => $icon, 'width' => 65, 'height' => 65]) !!}
-          @svgIcon($icon|65|65)
           <div class="mt-4">
             {!! apply_filters('the_content_lite', $content) ?? '' !!}
           </div>

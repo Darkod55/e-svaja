@@ -398,7 +398,7 @@ function christmas_gifts_render_card(array $item): void
  */
 function christmas_gifts_hero_image(): string
 {
-    $id = 33507;
+    $id = 33498;
     if (! function_exists('wp_get_attachment_image')) {
         return '';
     }
