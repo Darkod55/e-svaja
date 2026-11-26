@@ -93,6 +93,8 @@ $buttons = isset($buttons) && is_array($buttons) ? $buttons : [];
 @once
   <style>
     .svaja-seasonal-hero {
+      /* Left-edge black. Was 0.82. Lower this to lighten the whole overlay. */
+      --svaja-hero-shade: 0.55;
       position: relative;
       display: flex;
       align-items: center;
@@ -130,7 +132,7 @@ $buttons = isset($buttons) && is_array($buttons) ? $buttons : [];
       position: absolute;
       inset: 0;
       z-index: 0;
-      background: linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.62) 34%, rgba(0, 0, 0, 0.28) 62%, rgba(0, 0, 0, 0.08) 100%);
+      background: linear-gradient(90deg, rgb(0 0 0 / var(--svaja-hero-shade)) 0%, rgb(0 0 0 / calc(var(--svaja-hero-shade) * 0.76)) 34%, rgb(0 0 0 / calc(var(--svaja-hero-shade) * 0.34)) 62%, rgb(0 0 0 / calc(var(--svaja-hero-shade) * 0.1)) 100%);
     }
 
     .svaja-seasonal-hero__copy {
@@ -235,7 +237,7 @@ $buttons = isset($buttons) && is_array($buttons) ? $buttons : [];
       }
 
       .svaja-seasonal-hero__shade {
-        background: linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.68) 58%, rgba(0, 0, 0, 0.4) 100%);
+        background: linear-gradient(90deg, rgb(0 0 0 / var(--svaja-hero-shade)) 0%, rgb(0 0 0 / calc(var(--svaja-hero-shade) * 0.83)) 58%, rgb(0 0 0 / calc(var(--svaja-hero-shade) * 0.49)) 100%);
       }
 
       .svaja-seasonal-hero__copy {
