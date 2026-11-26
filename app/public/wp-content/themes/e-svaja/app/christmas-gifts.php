@@ -550,28 +550,16 @@ function christmas_gifts_render(): void
 
     $gift = christmas_gifts_gift_card();
     $gift_url = christmas_gifts_permalink($gift);
-    $image_id = 0;
-    if (is_object($gift) && method_exists($gift, 'get_image_id')) {
-        $raw_image = $gift->get_image_id();
-        $image_id = is_numeric($raw_image) ? (int) $raw_image : 0;
-    }
 
-    echo '<section class="christmas-gifts-cta mb-5">';
-    if ($image_id > 0 && function_exists('wp_get_attachment_image')) {
-        $card_image = wp_get_attachment_image($image_id, 'medium', false, [
-            'class' => 'christmas-gifts-cta-img',
-            'alt' => 'SVAJA Gift Card',
-            'loading' => 'lazy',
-            'decoding' => 'async',
-        ]);
-        if (is_string($card_image) && $card_image !== '') {
-            echo $card_image;
-        }
-    }
+    echo '<section class="christmas-gifts-cta">';
     echo '<div class="christmas-gifts-cta-copy">';
-    echo '<p>Not sure what they would choose? The £75 SVAJA Gift Card lets them decide.</p>';
+    echo '<h2>Not sure what they would <em>choose?</em></h2>';
+    echo '<p>The £75 SVAJA Gift Card lets them decide.</p>';
+    echo '</div>';
+    echo '<div class="christmas-gifts-cta-actions">';
     if ($gift_url !== '') {
-        echo '<a class="btn btn-lg btn-secondary" href="' . esc_url($gift_url) . '">The £75 SVAJA Gift Card</a>';
+        echo '<a class="christmas-gifts-cta-btn christmas-gifts-cta-btn-primary" href="' . esc_url($gift_url) . '">The £75 SVAJA Gift Card</a>';
     }
+    echo '<a class="christmas-gifts-cta-btn christmas-gifts-cta-btn-secondary" href="#under-100">Browse all gifts</a>';
     echo '</div></section>';
 }

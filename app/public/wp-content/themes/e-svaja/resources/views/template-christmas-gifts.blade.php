@@ -155,7 +155,7 @@
     }
 
     .christmas-gifts .christmas-gifts-band {
-      background: var(--bs-highlight-bg, #fcf2de);
+      background: #f9ece9;
       width: 100vw;
       margin-left: calc(50% - 50vw);
       margin-bottom: 3rem;
@@ -174,6 +174,11 @@
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 0.5rem;
+      scrollbar-width: none;
+    }
+
+    .christmas-gifts .christmas-gifts-track::-webkit-scrollbar {
+      display: none;
     }
 
     .christmas-gifts .christmas-gifts-track > [class*="col-"] {
@@ -229,20 +234,101 @@
 
     .christmas-gifts .christmas-gifts-cta {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 1.5rem;
-      margin-top: 1rem;
-    }
-
-    .christmas-gifts .christmas-gifts-cta-img {
-      width: 220px;
+      justify-content: space-between;
+      gap: 2.5rem;
       max-width: 100%;
-      height: auto;
+      margin: 0.5rem auto 3rem;
+      padding: 56px 64px;
+      border-radius: 24px;
+      background: #212529;
+      color: #f5efe6;
     }
 
-    .christmas-gifts .christmas-gifts-cta-copy p {
-      margin-bottom: 1rem;
+    .christmas-gifts .christmas-gifts-cta-copy {
+      max-width: 36rem;
+    }
+
+    .christmas-gifts .christmas-gifts-cta h2 {
+      margin: 0 0 0.75rem;
+      color: #f5efe6;
+      font-family: Poppins, var(--bs-body-font-family), sans-serif;
+      font-size: clamp(1.75rem, 3vw, 2.75rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .christmas-gifts .christmas-gifts-cta h2 em {
+      color: #f1bd58;
+      font-style: italic;
+      font-weight: 300;
+    }
+
+    .christmas-gifts .christmas-gifts-cta p {
+      margin: 0;
+      color: #f5efe6;
+      font-family: Poppins, var(--bs-body-font-family), sans-serif;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .christmas-gifts .christmas-gifts-cta-actions {
+      display: flex;
+      flex: 0 0 auto;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .christmas-gifts .christmas-gifts-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 14px 28px;
+      font-family: Poppins, var(--bs-body-font-family), sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.2;
+      text-align: center;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .christmas-gifts .christmas-gifts-cta-btn-primary {
+      border: 1px solid #f5efe6;
+      background: #f5efe6;
+      color: #212529;
+    }
+
+    .christmas-gifts .christmas-gifts-cta-btn-secondary {
+      border: 1px solid rgba(245, 239, 230, 0.85);
+      background: transparent;
+      color: #f5efe6;
+    }
+
+    .christmas-gifts .christmas-gifts-cta-btn-primary:hover,
+    .christmas-gifts .christmas-gifts-cta-btn-primary:focus-visible {
+      background: #fff;
+      color: #212529;
+    }
+
+    .christmas-gifts .christmas-gifts-cta-btn-secondary:hover,
+    .christmas-gifts .christmas-gifts-cta-btn-secondary:focus-visible {
+      background: rgba(245, 239, 230, 0.12);
+      color: #f5efe6;
+    }
+
+    @media (max-width: 767px) {
+      .christmas-gifts .christmas-gifts-cta {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 32px 24px;
+      }
+
+      .christmas-gifts .christmas-gifts-cta-btn {
+        width: 100%;
+        white-space: normal;
+      }
     }
   </style>
   <script>
@@ -253,14 +339,113 @@
       if (!track) {
         return;
       }
-      function step() {
-        var card = track.querySelector('[class*="col-"]');
+
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var paused = false;
+      var timer = null;
+      var looping = false;
+      var setWidth = 0;
+      var scrollTimer = null;
+
+      function gap() {
         var styles = window.getComputedStyle(track);
-        var gap = parseFloat(styles.columnGap || styles.gap) || 0;
-        return card ? card.getBoundingClientRect().width + gap : track.clientWidth;
+        return parseFloat(styles.columnGap || styles.gap) || 0;
       }
-      function update() {
-        var overflow = track.scrollWidth > track.clientWidth + 4;
+
+      function realCards() {
+        return Array.prototype.filter.call(track.children, function (el) {
+          return !el.hasAttribute('data-clone');
+        });
+      }
+
+      function step() {
+        var card = realCards()[0];
+        return card ? card.getBoundingClientRect().width + gap() : track.clientWidth;
+      }
+
+      function measureSet() {
+        var cards = realCards();
+        if (!cards.length) {
+          return 0;
+        }
+        var first = cards[0];
+        var last = cards[cards.length - 1];
+        return last.offsetLeft + last.offsetWidth - first.offsetLeft + gap();
+      }
+
+      function silence(node) {
+        node.setAttribute('data-clone', '1');
+        node.setAttribute('aria-hidden', 'true');
+        if ('inert' in node) {
+          node.inert = true;
+        }
+        node.querySelectorAll('a, button, input, select, textarea, [tabindex]').forEach(function (el) {
+          el.setAttribute('tabindex', '-1');
+        });
+      }
+
+      function clearClones() {
+        track.querySelectorAll('[data-clone]').forEach(function (node) {
+          node.remove();
+        });
+      }
+
+      function jump(left) {
+        var behavior = track.style.scrollBehavior;
+        track.style.scrollBehavior = 'auto';
+        track.scrollLeft = left;
+        track.style.scrollBehavior = behavior;
+      }
+
+      function normalize() {
+        if (!looping || !setWidth) {
+          return;
+        }
+        var left = track.scrollLeft;
+        if (left < setWidth) {
+          jump(left + setWidth);
+        } else if (left >= setWidth * 2) {
+          jump(left - setWidth);
+        }
+      }
+
+      function go(direction) {
+        if (!looping) {
+          track.scrollBy({ left: direction * step(), behavior: reduce ? 'auto' : 'smooth' });
+          return;
+        }
+        track.scrollBy({ left: direction * step(), behavior: reduce ? 'auto' : 'smooth' });
+      }
+
+      function stop() {
+        if (timer) {
+          window.clearInterval(timer);
+          timer = null;
+        }
+      }
+
+      function start() {
+        stop();
+        if (!looping || reduce || paused || document.hidden) {
+          return;
+        }
+        timer = window.setInterval(function () {
+          if (paused || document.hidden || !looping) {
+            return;
+          }
+          go(1);
+        }, 4000);
+      }
+
+      function setup() {
+        clearClones();
+        var cards = realCards();
+        var width = 0;
+        cards.forEach(function (card) {
+          width += card.getBoundingClientRect().width;
+        });
+        width += gap() * Math.max(0, cards.length - 1);
+        var overflow = cards.length > 1 && width > track.clientWidth + 4;
         slider.classList.toggle('is-static', !overflow);
         if (prev) {
           prev.hidden = !overflow;
@@ -268,19 +453,65 @@
         if (next) {
           next.hidden = !overflow;
         }
-      }
-      if (prev) {
-        prev.addEventListener('click', function () {
-          track.scrollBy({ left: -step(), behavior: 'smooth' });
+        looping = overflow;
+        if (!overflow) {
+          stop();
+          jump(0);
+          return;
+        }
+        var before = document.createDocumentFragment();
+        var after = document.createDocumentFragment();
+        cards.forEach(function (card) {
+          var lead = card.cloneNode(true);
+          var tail = card.cloneNode(true);
+          silence(lead);
+          silence(tail);
+          before.appendChild(lead);
+          after.appendChild(tail);
         });
+        track.insertBefore(before, track.firstChild);
+        track.appendChild(after);
+        setWidth = measureSet();
+        jump(setWidth);
+        start();
+      }
+
+      track.addEventListener('scroll', function () {
+        window.clearTimeout(scrollTimer);
+        scrollTimer = window.setTimeout(normalize, 120);
+      });
+      slider.addEventListener('mouseenter', function () { paused = true; stop(); });
+      slider.addEventListener('mouseleave', function () { paused = false; start(); });
+      slider.addEventListener('focusin', function () { paused = true; stop(); });
+      slider.addEventListener('focusout', function (event) {
+        if (!slider.contains(event.relatedTarget)) {
+          paused = false;
+          start();
+        }
+      });
+      track.addEventListener('pointerdown', function () { paused = true; stop(); });
+      window.addEventListener('pointerup', function () {
+        if (paused && !slider.matches(':hover') && !slider.contains(document.activeElement)) {
+          paused = false;
+          start();
+        }
+      });
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          stop();
+        } else {
+          start();
+        }
+      });
+      if (prev) {
+        prev.addEventListener('click', function () { go(-1); });
       }
       if (next) {
-        next.addEventListener('click', function () {
-          track.scrollBy({ left: step(), behavior: 'smooth' });
-        });
+        next.addEventListener('click', function () { go(1); });
       }
-      update();
-      window.addEventListener('resize', update);
+      window.addEventListener('resize', setup);
+      window.addEventListener('load', setup);
+      setup();
     });
   </script>
 @endsection
