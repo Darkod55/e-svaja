@@ -14,16 +14,16 @@
     ])
   @else
     @include('partials.hero-seasonal', [
-      'image_id' => 33507,
+      'image_id' => 33508,
       'alt_fallback' => 'Hand-blown glass art sculptures and gifts by Svaja',
-      'eyebrow' => '',
+      'eyebrow' => 'Christmas at SVAJA',
       'offer' => '',
-      'title' => 'Hand-Blown Glass Art Sculptures & Gifts - Svaja',
-      'intro' => "Kristina's Private Edit: five glass pieces for autumn, chosen by Kristina.",
+      'title' => 'Gifts they will keep on show',
+      'intro' => "Handmade glass sculptures, vases and animals. No two are quite alike.",
       'lcp' => true,
       'buttons' => [
-        ['label' => 'Shop Now', 'url' => home_url('/collections/')],
-        ['label' => 'See the five', 'url' => '#private-edit', 'secondary' => true],
+        ['label' => ' Shop Christmas Gifts', 'url' => home_url('/christmas-gifts/')],
+//        ['label' => 'See the five', 'url' => '#private-edit', 'secondary' => true],
       ],
     ])
   @endif

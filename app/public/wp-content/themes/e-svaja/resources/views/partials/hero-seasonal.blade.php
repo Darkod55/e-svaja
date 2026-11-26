@@ -4,7 +4,7 @@
   Title lines: "|" or " – " splits the italic second line; otherwise the latter half of the words.
 --}}
 @php
-$image_id = isset($image_id) && is_numeric($image_id) ? (int) $image_id : 0;
+$image_id = 33508; //isset($image_id) && is_numeric($image_id) ? (int) $image_id : 0;
 $alt = '';
 if ($image_id > 0 && function_exists('get_post_meta')) {
     $meta = get_post_meta($image_id, '_wp_attachment_image_alt', true);
