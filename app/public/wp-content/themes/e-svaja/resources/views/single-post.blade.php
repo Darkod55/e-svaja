@@ -17,6 +17,7 @@ $vip_form   = (get_field('vip_form', 'option') ?? '');
           <hr class="border-top border-branded-horizontal border-large w-50">
           <h1 class="anm8">{!! the_title() !!}</h1>
           {!! the_content() !!}
+          @include('partials.author-card')
         </div>
         <div class="col-md-4 col-lg-3 pt-5">
           <div class="recent-posts anm8">
