@@ -132,3 +132,96 @@ function schema_is_organization_entity($node)
 }
 
 add_filter('rank_math/json_ld', __NAMESPACE__ . '\\schema_filter_rank_math_json_ld', 99, 2);
+
+/**
+ * Rank Math's Block_Parser only looks inside core/group, core/columns, and
+ * core/column. The FAQ block on /faqs/ is an InnerBlock of an ACF block
+ * (acf/module-one-column), so it never becomes FAQPage schema.
+ *
+ * `rank_math/schema/block/before_filter` receives the parse_blocks() list.
+ * Rank Math then keeps only rank-math/* blocks, so this returns that flat
+ * list from every depth. A core/block reusable ref is parsed once per
+ * insertion; a ref that points at itself is not followed again.
+ *
+ * The callback argument is untyped: the filter can be handed a non-array.
+ */
+function schema_filter_rank_math_blocks($blocks)
+{
+    if (! is_array($blocks)) {
+        return $blocks;
+    }
+
+    $found = [];
+    $stack = [];
+    schema_collect_rank_math_blocks($blocks, $found, $stack);
+
+    return $found;
+}
+
+/**
+ * @param mixed $blocks
+ * @param array $found
+ * @param array $stack
+ */
+function schema_collect_rank_math_blocks($blocks, &$found, &$stack)
+{
+    if (! is_array($blocks)) {
+        return;
+    }
+
+    foreach ($blocks as $block) {
+        if (! is_array($block)) {
+            continue;
+        }
+
+        $name = isset($block['blockName']) && is_string($block['blockName']) ? $block['blockName'] : '';
+        if ($name !== '' && str_starts_with($name, 'rank-math/')) {
+            $found[] = $block;
+        }
+
+        if ($name === 'core/block') {
+            schema_collect_reusable_rank_math_blocks($block, $found, $stack);
+        }
+
+        if (isset($block['innerBlocks']) && is_array($block['innerBlocks'])) {
+            schema_collect_rank_math_blocks($block['innerBlocks'], $found, $stack);
+        }
+    }
+}
+
+/**
+ * @param mixed $block
+ * @param array $found
+ * @param array $stack
+ */
+function schema_collect_reusable_rank_math_blocks($block, &$found, &$stack)
+{
+    if (! is_array($block) || ! function_exists('get_post_field') || ! function_exists('parse_blocks')) {
+        return;
+    }
+
+    $ref = $block['attrs']['ref'] ?? null;
+    if (is_int($ref)) {
+        $ref_id = $ref;
+    } elseif (is_string($ref) && ctype_digit($ref)) {
+        $ref_id = (int) $ref;
+    } else {
+        return;
+    }
+
+    if ($ref_id <= 0 || ! empty($stack[$ref_id])) {
+        return;
+    }
+
+    $stack[$ref_id] = true;
+    $content = get_post_field('post_content', $ref_id);
+    if (is_string($content) && $content !== '') {
+        $parsed = parse_blocks($content);
+        if (is_array($parsed)) {
+            schema_collect_rank_math_blocks($parsed, $found, $stack);
+        }
+    }
+    unset($stack[$ref_id]);
+}
+
+add_filter('rank_math/schema/block/before_filter', __NAMESPACE__ . '\\schema_filter_rank_math_blocks');
