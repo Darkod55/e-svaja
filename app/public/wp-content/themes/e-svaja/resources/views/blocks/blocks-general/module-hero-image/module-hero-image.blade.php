@@ -3,11 +3,16 @@ $content     = App\Helpers()->getFieldDataOrBlockPlaceholder("content", $fields 
 $image       = App\Helpers()->getFieldDataOrBlockPlaceholder("image", $fields ?? '', $block ?? []);
 $link        = App\Helpers()->getFieldDataOrBlockPlaceholder("link", $fields ?? '', $block ?? []);
 $second_link = App\Helpers()->getFieldDataOrBlockPlaceholder("second_link", $fields ?? '', $block ?? []);
+$hero_attrs  = \App\home_image_attrs([
+  'class' => 'w-100 img-cover',
+  'loading' => 'eager',
+  'decoding' => 'sync',
+], $fields ?? null);
 ?>
 
-<section @if (!empty($block['anchor'])) id="{!! $block['anchor'] !!}" @endif class="block-{!! App\Helpers()->kebabCase($block['title']) !!} mxh-lg-100 p-rel module-layout-2 ovf-hidden">
+<section @if (!empty($block['anchor'])) id="{!! $block['anchor'] !!}" @endif class="block-{!! App\Helpers()->kebabCase($block['title']) !!} mxh-lg-100 p-rel module-layout-2 ovf-hidden{!! (!empty($block['className']) && $block['className'] === 'home-hero') ? ' home-hero' : '' !!}">
   @if ($image ?? false)
-    {!! wp_get_attachment_image($image, 'full', '', ['class' => 'w-100 img-cover', 'loading' => 'eager']) !!}
+    {!! wp_get_attachment_image($image, \App\home_image_size($fields ?? null), false, $hero_attrs) !!}
   @endif
   <div class="container-xxl p-clamp zi-1 video-content">
     <div class="d-flex jc-between flex-column flex-md-row ai-start align-items-md-center content-box">

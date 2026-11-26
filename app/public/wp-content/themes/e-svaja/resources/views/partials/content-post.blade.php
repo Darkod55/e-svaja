@@ -11,6 +11,7 @@ $post_used = ($post_loop ?? false ? $post_loop : get_the_ID());
     </div>
     <div class="card-content t-dark mb-4">
       <h2>{!! get_the_title($post_used) !!}</h2>
+      @include('partials.post-date', ['date_post' => $post_used])
       {!! apply_filters('the_content_lite', get_the_excerpt()) ?? '' !!}
     </div>
     <div class="card-footer mt-auto">

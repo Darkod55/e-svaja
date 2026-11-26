@@ -12,7 +12,7 @@ $link           = App\Helpers()->getFieldDataOrBlockPlaceholder('link', $fields 
       <div class="col-md-6 ps-md-0">
         <div class="p-rel h-100">
           @if ($image ?? false)
-              {!! wp_get_attachment_image($image, 'full', '', ['class' => 'bg-img-cover w-100 rounded-end img-sm-rel']) !!}
+              {!! wp_get_attachment_image($image, \App\home_image_size($fields ?? null), false, \App\home_image_attrs(['class' => 'bg-img-cover w-100 rounded-end img-sm-rel'], $fields ?? null)) !!}
           @endif
         </div>
       </div>

@@ -4,6 +4,7 @@
       <div class="col-md-8 col-lg-9">
         <div class="card-content mb-4 t-dark">
           <h2 class="mb-2">{!! $title !!}</h4>
+          @include('partials.post-date')
           {!! apply_filters('the_content_lite', the_excerpt()) !!}
         </div>
         <div class="card-footer mt-auto px-0">

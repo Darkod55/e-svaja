@@ -1,0 +1,154 @@
+/*
+ * Front page only. Plain CSS so it does not need a bud rebuild.
+ *
+ * The hero image is 1280×720 and is pulled out of flow by .img-cover
+ * (object-fit cover, and in this theme position absolute inside
+ * .module-layout-2). Width/height on the img then do not reserve the
+ * section. The block also uses mxh-lg-100, so on large screens the banner
+ * is capped at the viewport. Reserve that box up front.
+ *
+ * 100svh is used instead of 100vh so the mobile browser chrome does not
+ * change the hero height after load.
+ */
+
+.home-hero.block-module-hero-image {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: max(36rem, min(56.25vw, 100svh));
+}
+
+@media (min-width: 992px) {
+  .home-hero.block-module-hero-image {
+    height: min(56.25vw, 100svh);
+    min-height: min(56.25vw, 100svh);
+  }
+}
+
+.home-hero.block-module-hero-image > img {
+  /* Theme CSS sets z-index:-1, which paints the banner behind the white body
+     and keeps it from being the first paint. The text overlay stays on .zi-1. */
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  aspect-ratio: 1280 / 720;
+}
+
+.home-hero.block-module-hero-image .video-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* The promo bar is in the first HTML, but a webfont swap can still grow it. */
+#notf-bar {
+  min-height: 2.75rem;
+}
+
+/*
+ * Category row without Slick. Same 6 / 3 / 1 counts as the old data-slick
+ * config. The chevrons scroll one card; overflow stays in the row so the
+ * page below does not jump when a script rewrites the slides.
+ */
+.home-cat-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+/*
+ * This strip is also a Bootstrap column, so .row > * pads it by half the
+ * gutter on each side. scroll-snap then scrolls that left padding away while
+ * the page is still loading (scrollLeft ends up equal to the padding). Chrome
+ * treats that scroll as the end of the LCP window. On mobile it happens
+ * before the hero is recorded, so the page reports no Largest Contentful
+ * Paint at all. Folding the left padding into the right padding leaves every
+ * card in the same place and keeps scrollLeft at 0, so nothing scrolls.
+ * The selector has to beat .row > *, which is printed later from app.css.
+ */
+.row > .home-cat-scroll {
+  padding-left: 0;
+  padding-right: var(--bs-gutter-x);
+}
+
+.home-cat-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.home-cat-scroll > .cat-box {
+  flex: 0 0 calc(100% / 6);
+  max-width: calc(100% / 6);
+  scroll-snap-align: start;
+}
+
+#icon-slick-left,
+#icon-slick-right {
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .home-cat-scroll > .cat-box {
+    flex-basis: calc(100% / 3);
+    max-width: calc(100% / 3);
+  }
+}
+
+@media (max-width: 767px) {
+  .home-cat-scroll > .cat-box {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Star glyphs lived in woocommerce.css, which the homepage no longer loads. */
+@font-face {
+  font-family: star;
+  src: url("/wp-content/plugins/woocommerce/assets/fonts/star.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.woocommerce .star-rating {
+  overflow: hidden;
+  position: relative;
+  height: 1em;
+  line-height: 1;
+  font-size: 1em;
+  width: 5.4em;
+  font-family: star;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.woocommerce .star-rating::before {
+  content: "sssss";
+  color: #d3ced2;
+  float: left;
+  top: 0;
+  left: 0;
+  position: absolute;
+}
+
+.woocommerce .star-rating span {
+  overflow: hidden;
+  float: left;
+  top: 0;
+  left: 0;
+  position: absolute;
+  padding-top: 1.5em;
+}
+
+.woocommerce .star-rating span::before {
+  content: "SSSSS";
+  top: 0;
+  position: absolute;
+  left: 0;
+}

@@ -17,7 +17,7 @@ if ($fields->add_custom_content ?? false) {
     <div class="row g-4 flex-center">
       <div class="col-md-6 col-lg-5 anm8">
         @if ($image ?? false)
-          {!! wp_get_attachment_image($image, 'full', '', ['class' => 'w-100 rounded']) !!}
+          {!! wp_get_attachment_image($image, \App\home_image_size($fields ?? null), false, \App\home_image_attrs(['class' => 'w-100 rounded'], $fields ?? null)) !!}
         @endif
       </div>
       <div class="col-md-6 col-lg-4 offset-lg-1 anm8 text-center">

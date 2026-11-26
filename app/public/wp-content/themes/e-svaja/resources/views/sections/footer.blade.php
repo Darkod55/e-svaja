@@ -51,6 +51,6 @@
 </footer>
 <p class="text-center bg-dark py-2 t-white mb-0 small">
   {!! __('© Svaja 2026. All rights reserved.', 'sage') !!}
-  {!! __('A shop by ', 'sage') !!} <a href="https://metapixels.co.uk/" target="_blank">MetaPixels Ltd</a>
+  {!! __('A shop by ', 'sage') !!} <a href="https://metapixels.co.uk/" target="_blank" style="color: white !important; text-decoration: underline !important;">MetaPixels Ltd</a>
 </p>
 @includeIf('components.footer-icons')
