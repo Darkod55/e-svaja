@@ -468,8 +468,28 @@ HTML,
 }
 
 /**
+ * Which homepage hero to render.
+ *
+ * Default is the seasonal hero (attachment 33507). Return 'classic' to put
+ * back the previous hero (attachment 33435) without editing the template:
+ *
+ *     add_filter('esvaja/homepage_hero_variant', static function () {
+ *         return 'classic';
+ *     });
+ */
+function homepage_hero_variant(): string
+{
+    $variant = apply_filters('esvaja/homepage_hero_variant', 'seasonal');
+
+    return is_string($variant) && $variant === 'classic' ? 'classic' : 'seasonal';
+}
+
+/**
  * Preload the hero (LCP) image and stop the front page loading block/plugin
  * assets that the hard-coded template does not render.
+ *
+ * Only the active hero is preloaded, so the classic banner is not fetched
+ * while the seasonal hero is showing.
  */
 function homepage_preload_hero(): void
 {
@@ -477,17 +497,18 @@ function homepage_preload_hero(): void
         return;
     }
 
-    $id = 33435;
-    // Same registered size as the <img src>, so the preload href is the mobile
-    // candidate (768w) rather than the 1280w file. imagesrcset still lets a
-    // wide screen pick the larger file, matching the img srcset.
-    $src = wp_get_attachment_image_url($id, 'medium_large');
+    $classic = homepage_hero_variant() === 'classic';
+    $id = $classic ? 33435 : 33507;
+    // Classic img src is medium_large. Seasonal uses the full file, matching
+    // the Christmas hero. imagesrcset still offers the other widths.
+    $size = $classic ? 'medium_large' : 'full';
+    $src = wp_get_attachment_image_url($id, $size);
     if (! $src) {
         return;
     }
 
     $src = homepage_to_webp_url($src);
-    $srcset = wp_get_attachment_image_srcset($id, 'medium_large');
+    $srcset = wp_get_attachment_image_srcset($id, $size);
     $type = str_ends_with(strtolower((string) wp_parse_url($src, PHP_URL_PATH)), '.webp')
         ? 'image/webp'
         : (get_post_mime_type($id) ?: 'image/webp');

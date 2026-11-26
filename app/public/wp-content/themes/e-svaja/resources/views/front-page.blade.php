@@ -3,12 +3,30 @@
 @section('content')
   @php
     $homepage = \App\homepage_sections();
+    // 'seasonal' (default) or 'classic'. See homepage_hero_variant().
+    $hero_variant = \App\homepage_hero_variant();
   @endphp
 
-  @include('blocks.blocks-general.module-hero-image.module-hero-image', [
-    'fields' => $homepage['hero']['fields'],
-    'block' => $homepage['hero']['block'],
-  ])
+  @if ($hero_variant === 'classic')
+    @include('partials.hero-homepage-classic', [
+      'fields' => $homepage['hero']['fields'],
+      'block' => $homepage['hero']['block'],
+    ])
+  @else
+    @include('partials.hero-seasonal', [
+      'image_id' => 33507,
+      'alt_fallback' => 'Hand-blown glass art sculptures and gifts by Svaja',
+      'eyebrow' => '',
+      'offer' => '',
+      'title' => 'Hand-Blown Glass Art Sculptures & Gifts - Svaja',
+      'intro' => "Kristina's Private Edit: five glass pieces for autumn, chosen by Kristina.",
+      'lcp' => true,
+      'buttons' => [
+        ['label' => 'Shop Now', 'url' => home_url('/collections/')],
+        ['label' => 'See the five', 'url' => '#private-edit', 'secondary' => true],
+      ],
+    ])
+  @endif
 
   @include('blocks.blocks-woo.module-products.module-products', [
     'fields' => $homepage['products']['fields'],

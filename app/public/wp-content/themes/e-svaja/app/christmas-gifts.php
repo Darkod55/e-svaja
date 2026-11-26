@@ -396,34 +396,6 @@ function christmas_gifts_render_card(array $item): void
 /**
  * Attachment 33507 is the page hero and the LCP image. Empty string when it is missing.
  */
-function christmas_gifts_hero_image(): string
-{
-    $id = 33498;
-    if (! function_exists('wp_get_attachment_image')) {
-        return '';
-    }
-
-    $alt = '';
-    if (function_exists('get_post_meta')) {
-        $meta = get_post_meta($id, '_wp_attachment_image_alt', true);
-        $alt = is_string($meta) ? trim($meta) : '';
-    }
-    if ($alt === '') {
-        $alt = 'SVAJA Christmas gifts';
-    }
-
-    $html = wp_get_attachment_image($id, 'full', false, [
-        'class' => 'w-100 img-cover christmas-gifts-hero-img',
-        'alt' => $alt,
-        'loading' => 'eager',
-        'fetchpriority' => 'high',
-        'decoding' => 'sync',
-        'sizes' => '100vw',
-    ]);
-
-    return is_string($html) ? $html : '';
-}
-
 /**
  * Split a WP page title for the hero.
  * "|" or " – " (en dash) puts the part after the separator on the next line in italics.
@@ -468,30 +440,6 @@ function christmas_gifts_title_html($title): string
     }
 
     return $html;
-}
-
-function christmas_gifts_render_hero(): void
-{
-    $image = christmas_gifts_hero_image();
-    $title = function_exists('get_the_title') ? get_the_title() : '';
-    $title = is_string($title) ? $title : '';
-    $offer = christmas_gifts_black_friday_line();
-
-    echo '<section class="christmas-gifts-hero p-rel ovf-hidden' . ($image === '' ? ' is-fallback' : '') . '">';
-    if ($image !== '') {
-        echo $image;
-        echo '<div class="christmas-gifts-hero-shade" aria-hidden="true"></div>';
-    }
-    echo '<div class="christmas-gifts-hero-copy zi-1">';
-    echo '<p class="christmas-gifts-eyebrow">Christmas at SVAJA</p>';
-    echo '<span class="christmas-gifts-rule" aria-hidden="true"></span>';
-    if ($offer !== '') {
-        echo '<p class="christmas-gifts-offer">' . esc_html($offer) . '</p>';
-    }
-    echo '<h1>' . christmas_gifts_title_html($title) . '</h1>';
-    echo '<p class="christmas-gifts-intro">Every SVAJA piece is designed in the UK and handmade by skilled glassmakers in European studios, so the gift you choose is individual. Here is our Christmas selection, by budget.</p>';
-    echo '<a class="christmas-gifts-hero-btn" href="#under-100">Shop Christmas Gifts</a>';
-    echo '</div></section>';
 }
 
 function christmas_gifts_render_missing_card(string $name, string $line): void
