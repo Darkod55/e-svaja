@@ -155,7 +155,7 @@
     }
 
     .christmas-gifts .christmas-gifts-band {
-      background: #f9ece9;
+      background: #f9f9f9;
       width: 100vw;
       margin-left: calc(50% - 50vw);
       margin-bottom: 3rem;
@@ -226,10 +226,68 @@
       display: none;
     }
 
+    .christmas-gifts .christmas-gifts-track > [class*="col-"] {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .christmas-gifts .christmas-gifts-track .card {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .christmas-gifts .woocommerce-LoopProduct-link {
+      display: block;
+    }
+
+    .christmas-gifts .christmas-gifts-track img {
+      display: block;
+      width: 100%;
+      margin: 0;
+    }
+
+    .christmas-gifts .shop-card {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 1.5rem 1.5rem;
+    }
+
+    .christmas-gifts .title-wrap {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .christmas-gifts .prod-cat,
+    .christmas-gifts .woocommerce-loop-product__title,
+    .christmas-gifts .christmas-gifts-line,
+    .christmas-gifts .star-rating,
+    .christmas-gifts .price,
+    .christmas-gifts .rating-price-add,
+    .christmas-gifts .rating-price-add .btn {
+      margin: 0 !important;
+    }
+
+    .christmas-gifts .rating-price-add {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .christmas-gifts .christmas-gifts-line {
-      margin: 0.25rem 0 0;
-      font-size: 1rem;
-      line-height: 1.45;
+      flex: 1 1 auto;
+      color: #212529;
+      font-size: 0.9375rem;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    .christmas-gifts a .christmas-gifts-line {
+      color: #212529;
     }
 
     .christmas-gifts .christmas-gifts-cta {
